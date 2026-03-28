@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Resident Communication Center - SmartHostel</title>
+<!-- Google Fonts: Manrope & Inter -->
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;700;800&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "background": "#f8f9fa",
+                        "surface-bright": "#f8f9fa",
+                        "surface-container": "#edeeef",
+                        "primary-fixed": "#dee0ff",
+                        "error": "#ba1a1a",
+                        "on-error": "#ffffff",
+                        "outline-variant": "#c5c5d4",
+                        "on-surface-variant": "#454652",
+                        "on-surface": "#191c1d",
+                        "on-secondary-fixed-variant": "#2f3f92",
+                        "secondary": "#4858ab",
+                        "primary": "#24389c",
+                        "on-background": "#191c1d",
+                        "surface-container-highest": "#e1e3e4",
+                        "on-tertiary-container": "#ffc7a2",
+                        "on-tertiary-fixed": "#301400",
+                        "primary-fixed-dim": "#bac3ff",
+                        "tertiary-container": "#8f4700",
+                        "inverse-surface": "#2e3132",
+                        "tertiary-fixed": "#ffdcc6",
+                        "surface-container-lowest": "#ffffff",
+                        "error-container": "#ffdad6",
+                        "on-tertiary": "#ffffff",
+                        "on-secondary-fixed": "#00105b",
+                        "tertiary-fixed-dim": "#ffb784",
+                        "surface-container-high": "#e7e8e9",
+                        "inverse-primary": "#bac3ff",
+                        "surface-variant": "#e1e3e4",
+                        "on-error-container": "#93000a",
+                        "primary-container": "#3f51b5",
+                        "on-tertiary-fixed-variant": "#713700",
+                        "surface-dim": "#d9dadb",
+                        "surface-tint": "#4355b9",
+                        "secondary-fixed-dim": "#bac3ff",
+                        "surface-container-low": "#f3f4f5",
+                        "surface": "#f8f9fa",
+                        "secondary-container": "#96a5ff",
+                        "on-primary-fixed-variant": "#293ca0",
+                        "tertiary": "#6c3400",
+                        "on-primary-fixed": "#00105c",
+                        "inverse-on-surface": "#f0f1f2",
+                        "on-primary": "#ffffff",
+                        "outline": "#757684",
+                        "secondary-fixed": "#dee0ff",
+                        "on-secondary": "#ffffff",
+                        "on-secondary-container": "#27378a",
+                        "on-primary-container": "#cacfff"
+                    },
+                    fontFamily: {
+                        "headline": ["Manrope"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(16px);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body selection:bg-primary-fixed">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-[#f8f9fa] dark:bg-slate-900 shadow-[0_24px_24px_-4px_rgba(36,56,156,0.12)] h-16 flex justify-between items-center px-6">
+<div class="flex items-center gap-4">
+<span class="text-2xl font-black text-[#24389c] dark:text-[#dee0ff] tracking-tight font-headline">SmartHostel</span>
+</div>
+<div class="flex items-center gap-6">
+<nav class="hidden md:flex gap-8 items-center">
+<a class="text-[#454652] dark:text-slate-400 font-['Manrope'] font-bold text-lg hover:bg-[#edeeef] dark:hover:bg-slate-800 transition-all duration-200 px-3 py-1 rounded-lg" href="#">Dashboard</a>
+<a class="text-[#24389c] dark:text-[#dee0ff] font-bold font-['Manrope'] text-lg px-3 py-1 rounded-lg bg-[#edeeef] dark:bg-slate-800" href="#">Communications</a>
+<a class="text-[#454652] dark:text-slate-400 font-['Manrope'] font-bold text-lg hover:bg-[#edeeef] dark:hover:bg-slate-800 transition-all duration-200 px-3 py-1 rounded-lg" href="#">Directory</a>
+</nav>
+<div class="flex items-center gap-2">
+<button class="p-2 text-[#24389c] hover:bg-[#edeeef] rounded-full transition-transform active:scale-95">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="p-2 text-[#24389c] hover:bg-[#edeeef] rounded-full transition-transform active:scale-95">
+<span class="material-symbols-outlined">account_circle</span>
+</button>
+</div>
+</div>
+</header>
+<div class="flex pt-16 min-h-screen">
+<!-- SideNavBar -->
+<aside class="hidden md:flex fixed left-0 top-0 h-full w-64 bg-[#2e3132] dark:bg-black shadow-xl flex-col py-6 z-40">
+<div class="px-6 mb-8 mt-12">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container font-bold overflow-hidden">
+<img alt="Admin Avatar" class="w-full h-full object-cover" data-alt="professional headshot of a young male administrator in a clean minimalist studio setting with soft lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCN1aJRR--L-fqw47dP2mUk7vJ7jfJzywSs_zMO2mm2hCuxh_hnT91fO2QdgBjIUPlMx6eG8HAzNM-ByXX8X2NGPNhjWgG5fHwV-YARNKJIM6_OcycWViv-c-NYlNVCipIijKZk_1FFNGuEk8bVz4H0ND10jbRLPEitoERHmYCWkkXP5uTcvXa-eV3zDw_eAWVwEbyNl-1YSDjRu0aFtsCmkljdrMlxkWRUWku1W-JOQ6dAZV74GjYappox4HMc3_fNgmpInQUGNqI"/>
+</div>
+<div>
+<p class="text-[#ffffff] font-bold text-sm font-headline">Hostel Admin</p>
+<p class="text-slate-400 text-xs font-['Inter']">Floor 4 Manager</p>
+</div>
+</div>
+</div>
+<nav class="flex-1">
+<a class="flex items-center gap-3 px-4 py-3 text-slate-400 font-['Inter'] text-sm font-medium hover:bg-white/10 hover:text-white transition-all hover:translate-x-1" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span>Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-[#dee0ff] border-l-4 border-l-[#dee0ff] bg-white/5 font-['Inter'] text-sm font-medium" href="#">
+<span class="material-symbols-outlined">campaign</span>
+<span>Communications</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-400 font-['Inter'] text-sm font-medium hover:bg-white/10 hover:text-white transition-all hover:translate-x-1" href="#">
+<span class="material-symbols-outlined">group</span>
+<span>Resident Directory</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-400 font-['Inter'] text-sm font-medium hover:bg-white/10 hover:text-white transition-all hover:translate-x-1" href="#">
+<span class="material-symbols-outlined">room_service</span>
+<span>Facilities</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-400 font-['Inter'] text-sm font-medium hover:bg-white/10 hover:text-white transition-all hover:translate-x-1" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span>Settings</span>
+</a>
+</nav>
+<div class="mt-auto px-4 pb-12 space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 text-slate-400 font-['Inter'] text-sm font-medium hover:bg-white/10 hover:text-white transition-all" href="#">
+<span class="material-symbols-outlined">help_outline</span>
+<span>Help Center</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-400 font-['Inter'] text-sm font-medium hover:bg-white/10 hover:text-white transition-all" href="#">
+<span class="material-symbols-outlined">logout</span>
+<span>Logout</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="flex-1 md:ml-64 p-6 lg:p-10 bg-surface grid grid-cols-1 lg:grid-cols-12 gap-8">
+<!-- Announcement Feed (Main Content) -->
+<section class="lg:col-span-8 space-y-8">
+<header class="flex justify-between items-end">
+<div>
+<h1 class="font-headline text-3xl font-extrabold text-on-surface tracking-tight">Announcement Feed</h1>
+<p class="text-on-surface-variant font-medium">Stay updated with the latest from management</p>
+</div>
+<div class="flex gap-2">
+<span class="px-4 py-1.5 bg-surface-container-high rounded-full text-xs font-bold text-on-surface-variant cursor-pointer hover:bg-primary-fixed transition-colors">ALL</span>
+<span class="px-4 py-1.5 bg-white rounded-full text-xs font-bold text-on-surface-variant border border-outline-variant/20 cursor-pointer hover:bg-primary-fixed transition-colors">POLICIES</span>
+<span class="px-4 py-1.5 bg-white rounded-full text-xs font-bold text-on-surface-variant border border-outline-variant/20 cursor-pointer hover:bg-primary-fixed transition-colors">FACILITIES</span>
+</div>
+</header>
+<div class="space-y-6">
+<!-- Policy Change Card -->
+<article class="bg-surface-container-lowest p-6 rounded-3xl shadow-[0_8px_24px_rgba(36,56,156,0.06)] group hover:-translate-y-1 transition-all duration-300">
+<div class="flex justify-between items-start mb-4">
+<span class="px-3 py-1 bg-tertiary-fixed text-on-tertiary-fixed-variant text-[10px] font-black uppercase tracking-widest rounded-full">Policy Revision</span>
+<time class="text-xs text-on-surface-variant font-medium">2 hours ago</time>
+</div>
+<h2 class="font-headline text-xl font-bold text-on-surface mb-3 group-hover:text-primary transition-colors">Revision to Dining Hall Timings</h2>
+<p class="text-on-surface-variant leading-relaxed mb-6">Starting next Monday, the dinner service will be extended by 30 minutes to accommodate residents with late-evening laboratory sessions. New timings: 7:30 PM - 10:00 PM.</p>
+<div class="flex items-center gap-4">
+<div class="flex -space-x-2">
+<div class="w-8 h-8 rounded-full border-2 border-surface-container-lowest bg-primary-container flex items-center justify-center text-[10px] text-white font-bold">JD</div>
+<div class="w-8 h-8 rounded-full border-2 border-surface-container-lowest bg-secondary-container flex items-center justify-center text-[10px] text-white font-bold">AS</div>
+</div>
+<span class="text-xs text-on-surface-variant">Acknowledged by 42 residents</span>
+<button class="ml-auto flex items-center gap-2 text-primary font-bold text-sm group/btn">
+                                Read Full Document
+                                <span class="material-symbols-outlined text-sm group-hover/btn:translate-x-1 transition-transform">arrow_forward</span>
+</button>
+</div>
+</article>
+<!-- Global Update Card -->
+<article class="bg-surface-container-lowest p-6 rounded-3xl shadow-[0_8px_24px_rgba(36,56,156,0.06)] group hover:-translate-y-1 transition-all duration-300">
+<div class="flex justify-between items-start mb-4">
+<span class="px-3 py-1 bg-primary-fixed text-on-primary-fixed-variant text-[10px] font-black uppercase tracking-widest rounded-full">Global Facility</span>
+<time class="text-xs text-on-surface-variant font-medium">Yesterday</time>
+</div>
+<div class="grid md:grid-cols-3 gap-6">
+<div class="md:col-span-1 rounded-2xl overflow-hidden aspect-video md:aspect-square">
+<img alt="Water Cooler" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="modern stainless steel water cooler station in a bright minimalist hallway with polished concrete floors" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBqWaFDfMZ0t82I4umuOJBBtmegY09I2sl2NJ1AxwQDniJ2giwvzjgE4SSFMU0ZrRaCOQGk3JYmOykitlH21SN4_qKG8_H_u8_u5MC2wMFYeflW4XOSzRYZ1EXThp5VVFBh9TIKYFBkIYiyWaqADaXeFjzBEkLAMqHHb0CK2ippBnorKKB7qxY7AQltMuUEEmTopMMNAHaNSkwPmYERrc-Cj0NYhZOqGTNU7S1wOZGJJo7uvK5hRkPafx--VGtKPl5V8rVA2Q_D7Lk"/>
+</div>
+<div class="md:col-span-2">
+<h2 class="font-headline text-xl font-bold text-on-surface mb-3 group-hover:text-primary transition-colors">New Water Cooler Installed in Wing B</h2>
+<p class="text-on-surface-variant leading-relaxed mb-4">A high-capacity UV filtration system has been installed near the elevator lobby in Wing B. This unit features touchless dispensing and instant chilled water.</p>
+<div class="flex items-center gap-2 text-xs font-bold text-secondary">
+<span class="material-symbols-outlined text-sm">location_on</span>
+                                    Wing B, Ground Floor
+                                </div>
+</div>
+</div>
+</article>
+<!-- Targeted Floor Card -->
+<article class="relative overflow-hidden bg-surface-container-low p-6 rounded-3xl border border-primary-fixed/30 group hover:-translate-y-1 transition-all duration-300">
+<!-- Target Indicator -->
+<div class="absolute top-0 right-0 px-4 py-1 bg-primary text-white text-[10px] font-bold rounded-bl-xl">Targeted: Floor 4</div>
+<div class="flex justify-between items-start mb-4">
+<span class="px-3 py-1 bg-secondary-fixed text-on-secondary-fixed-variant text-[10px] font-black uppercase tracking-widest rounded-full">Maintenance</span>
+<time class="text-xs text-on-surface-variant font-medium">3 days ago</time>
+</div>
+<h2 class="font-headline text-xl font-bold text-on-surface mb-3">Upcoming Room Inspection for Floor 4</h2>
+<p class="text-on-surface-variant leading-relaxed mb-4">Routine safety and hygiene inspections are scheduled for all rooms on the 4th floor. Please ensure the main walkway in your room is clear. Staff will be accompanied by a student representative.</p>
+<div class="flex items-center gap-4 py-3 border-t border-outline-variant/20">
+<div class="flex items-center gap-2 text-on-surface-variant text-sm">
+<span class="material-symbols-outlined text-sm">calendar_today</span>
+                                Friday, Oct 27
+                            </div>
+<div class="flex items-center gap-2 text-on-surface-variant text-sm">
+<span class="material-symbols-outlined text-sm">schedule</span>
+                                10:00 AM - 02:00 PM
+                            </div>
+</div>
+</article>
+</div>
+</section>
+<!-- Notification Sidebar (Sticky Right) -->
+<aside class="lg:col-span-4 h-fit sticky top-24">
+<div class="bg-surface-container-lowest rounded-3xl p-6 shadow-[0_24px_48px_-12px_rgba(36,56,156,0.08)]">
+<div class="flex justify-between items-center mb-6">
+<h3 class="font-headline text-xl font-extrabold text-on-surface">Real-time Alerts</h3>
+<button class="text-xs font-bold text-primary hover:underline">Mark as read</button>
+</div>
+<div class="space-y-4">
+<!-- Personal -->
+<div class="p-4 rounded-2xl bg-error-container/10 border-l-4 border-error flex gap-4 transition-all hover:bg-error-container/20">
+<div class="text-error mt-1">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">priority_high</span>
+</div>
+<div class="flex-1">
+<div class="flex justify-between">
+<span class="text-[9px] font-black uppercase text-error tracking-tighter">FOR YOU</span>
+<span class="text-[10px] text-on-surface-variant">10m ago</span>
+</div>
+<p class="text-sm font-bold text-on-surface">Mess Fee Payment Due</p>
+<p class="text-xs text-on-surface-variant mt-1">Final reminder for October billing cycle.</p>
+</div>
+</div>
+<!-- Floor-wise -->
+<div class="p-4 rounded-2xl bg-primary-fixed/10 border-l-4 border-primary flex gap-4 transition-all hover:bg-primary-fixed/20">
+<div class="text-primary mt-1">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">groups</span>
+</div>
+<div class="flex-1">
+<div class="flex justify-between">
+<span class="text-[9px] font-black uppercase text-primary tracking-tighter">YOUR FLOOR</span>
+<span class="text-[10px] text-on-surface-variant">1h ago</span>
+</div>
+<p class="text-sm font-bold text-on-surface">Floor 4 Meeting tonight</p>
+<p class="text-xs text-on-surface-variant mt-1">7 PM at the Common Lounge. Mandatory attendance.</p>
+</div>
+</div>
+<!-- Room-wise -->
+<div class="p-4 rounded-2xl bg-secondary-fixed/10 border-l-4 border-secondary flex gap-4 transition-all hover:bg-secondary-fixed/20">
+<div class="text-secondary mt-1">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">meeting_room</span>
+</div>
+<div class="flex-1">
+<div class="flex justify-between">
+<span class="text-[9px] font-black uppercase text-secondary tracking-tighter">YOUR ROOM</span>
+<span class="text-[10px] text-on-surface-variant">3h ago</span>
+</div>
+<p class="text-sm font-bold text-on-surface">Room 402B Cleaning Scheduled</p>
+<p class="text-xs text-on-surface-variant mt-1">Housekeeping will arrive at 11:30 AM today.</p>
+</div>
+</div>
+<!-- Global -->
+<div class="p-4 rounded-2xl bg-surface-container-high border-l-4 border-outline flex gap-4 transition-all hover:bg-surface-container-highest">
+<div class="text-outline mt-1">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">public</span>
+</div>
+<div class="flex-1">
+<div class="flex justify-between">
+<span class="text-[9px] font-black uppercase text-outline tracking-tighter">GLOBAL</span>
+<span class="text-[10px] text-on-surface-variant">5h ago</span>
+</div>
+<p class="text-sm font-bold text-on-surface">Main Gate Maintenance Alert</p>
+<p class="text-xs text-on-surface-variant mt-1">South Gate closed. Please use North entry.</p>
+</div>
+</div>
+<!-- Personal (Secondary) -->
+<div class="p-4 rounded-2xl bg-tertiary-fixed/10 border-l-4 border-tertiary flex gap-4 transition-all hover:bg-tertiary-fixed/20">
+<div class="text-tertiary mt-1">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<div class="flex-1">
+<div class="flex justify-between">
+<span class="text-[9px] font-black uppercase text-tertiary tracking-tighter">FOR YOU</span>
+<span class="text-[10px] text-on-surface-variant">Yesterday</span>
+</div>
+<p class="text-sm font-bold text-on-surface">Laundry Ready</p>
+<p class="text-xs text-on-surface-variant mt-1">Your batch #402 can be picked up from the counter.</p>
+</div>
+</div>
+</div>
+<button class="w-full mt-6 py-3 border border-outline-variant/30 rounded-2xl text-sm font-bold text-on-surface-variant hover:bg-surface-container-low transition-colors flex items-center justify-center gap-2">
+                        View History
+                        <span class="material-symbols-outlined text-sm">history</span>
+</button>
+</div>
+<!-- Admin Context Tip -->
+<div class="mt-6 p-4 bg-primary text-on-primary rounded-3xl flex items-start gap-4 shadow-lg">
+<span class="material-symbols-outlined mt-1">lightbulb</span>
+<div>
+<p class="text-sm font-bold">Admin Targeted Alert</p>
+<p class="text-xs opacity-80 mt-1">Messages are filtered based on your Resident ID (Floor 4, Wing B, Room 402B).</p>
+</div>
+</div>
+</aside>
+</main>
+</div>
+<!-- BottomNavBar (Mobile Only) -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full flex justify-around items-center px-4 pt-2 pb-safe bg-white/80 backdrop-blur-lg border-t border-[#c5c5d4]/20 shadow-[0_-8px_24px_rgba(0,0,0,0.05)] z-50 rounded-t-3xl">
+<a class="flex flex-col items-center justify-center text-[#454652] px-5 py-1" href="#">
+<span class="material-symbols-outlined">person</span>
+<span class="font-['Inter'] text-[10px] font-semibold uppercase tracking-wider">Personal</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#24389c] bg-[#dee0ff]/30 rounded-2xl px-5 py-1" href="#">
+<span class="material-symbols-outlined">layers</span>
+<span class="font-['Inter'] text-[10px] font-semibold uppercase tracking-wider">Floor</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#454652] px-5 py-1" href="#">
+<span class="material-symbols-outlined">domain</span>
+<span class="font-['Inter'] text-[10px] font-semibold uppercase tracking-wider">Wing</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#454652] px-5 py-1" href="#">
+<span class="material-symbols-outlined">public</span>
+<span class="font-['Inter'] text-[10px] font-semibold uppercase tracking-wider">Global</span>
+</a>
+</nav>
+</body></html>

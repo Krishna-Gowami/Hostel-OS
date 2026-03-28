@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Role &amp; Access Management | HostelOS</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "surface-container-highest": "#e1e3e4",
+              "error": "#ba1a1a",
+              "inverse-surface": "#2e3132",
+              "surface-tint": "#4355b9",
+              "on-secondary": "#ffffff",
+              "outline": "#757684",
+              "on-surface": "#191c1d",
+              "secondary-container": "#96a5ff",
+              "on-primary": "#ffffff",
+              "secondary-fixed-dim": "#bac3ff",
+              "on-surface-variant": "#454652",
+              "on-error": "#ffffff",
+              "error-container": "#ffdad6",
+              "surface": "#f8f9fa",
+              "primary-fixed-dim": "#bac3ff",
+              "on-background": "#191c1d",
+              "on-error-container": "#93000a",
+              "outline-variant": "#c5c5d4",
+              "inverse-primary": "#bac3ff",
+              "tertiary": "#6c3400",
+              "on-tertiary-fixed-variant": "#713700",
+              "on-primary-fixed-variant": "#293ca0",
+              "on-secondary-fixed": "#00105b",
+              "on-primary-fixed": "#00105c",
+              "on-primary-container": "#cacfff",
+              "secondary-fixed": "#dee0ff",
+              "inverse-on-surface": "#f0f1f2",
+              "surface-variant": "#e1e3e4",
+              "surface-container-high": "#e7e8e9",
+              "primary-fixed": "#dee0ff",
+              "tertiary-fixed-dim": "#ffb784",
+              "on-tertiary-fixed": "#301400",
+              "on-secondary-fixed-variant": "#2f3f92",
+              "surface-container-low": "#f3f4f5",
+              "surface-bright": "#f8f9fa",
+              "surface-dim": "#d9dadb",
+              "surface-container-lowest": "#ffffff",
+              "background": "#f8f9fa",
+              "on-tertiary": "#ffffff",
+              "primary-container": "#3f51b5",
+              "tertiary-container": "#8f4700",
+              "on-secondary-container": "#27378a",
+              "secondary": "#4858ab",
+              "primary": "#24389c",
+              "surface-container": "#edeeef",
+              "tertiary-fixed": "#ffdcc6",
+              "on-tertiary-container": "#ffc7a2"
+            },
+            fontFamily: {
+              "headline": ["Manrope", "sans-serif"],
+              "body": ["Inter", "sans-serif"],
+              "label": ["Inter", "sans-serif"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        h1, h2, h3, h4, .font-headline { font-family: 'Manrope', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        /* Custom Toggle Style */
+        .toggle-checkbox:checked { right: 0; border-color: #24389c; }
+        .toggle-checkbox:checked + .toggle-label { background-color: #24389c; }
+    </style>
+</head>
+<body class="bg-surface text-on-surface antialiased">
+<!-- SideNavBar Component -->
+<aside class="fixed left-0 top-0 h-full z-40 flex flex-col bg-slate-900 dark:bg-black w-64 shadow-xl shadow-indigo-900/20">
+<div class="p-6">
+<div class="flex items-center gap-3 mb-8">
+<div class="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white font-bold text-xl">G</div>
+<div>
+<h1 class="text-xl font-bold text-white tracking-tight leading-none">The Grand Hostel</h1>
+<p class="text-[10px] text-slate-400 uppercase tracking-widest mt-1">Premium Management</p>
+</div>
+</div>
+<nav class="space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white transition-colors hover:bg-slate-800/50 transition-all duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="text-sm font-medium">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white transition-colors hover:bg-slate-800/50 transition-all duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="bed">bed</span>
+<span class="text-sm font-medium">Occupancy</span>
+</a>
+<!-- Active Tab: Roles & Access -->
+<a class="flex items-center gap-3 px-4 py-3 text-indigo-100 bg-indigo-600/20 border-l-4 border-indigo-500 rounded-r-lg" href="#">
+<span class="material-symbols-outlined" data-icon="admin_panel_settings">admin_panel_settings</span>
+<span class="text-sm font-medium">Roles &amp; Access</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white transition-colors hover:bg-slate-800/50 transition-all duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="payments">payments</span>
+<span class="text-sm font-medium">Finance</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white transition-colors hover:bg-slate-800/50 transition-all duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="report_problem">report_problem</span>
+<span class="text-sm font-medium">Complaints</span>
+</a>
+</nav>
+</div>
+<div class="mt-auto p-6 space-y-1">
+<button class="w-full py-3 px-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold text-sm flex items-center justify-center gap-2 mb-6 transition-transform scale-95 active:scale-90">
+<span class="material-symbols-outlined text-sm" data-icon="add">add</span>
+                Add New Role
+            </button>
+<a class="flex items-center gap-3 px-4 py-2 text-slate-400 hover:text-white transition-colors text-sm" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span>Settings</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-2 text-slate-400 hover:text-white transition-colors text-sm" href="#">
+<span class="material-symbols-outlined" data-icon="logout">logout</span>
+<span>Logout</span>
+</a>
+</div>
+</aside>
+<!-- TopNavBar Component -->
+<header class="flex justify-between items-center h-16 px-8 ml-64 w-[calc(100%-16rem)] bg-slate-50/80 dark:bg-slate-950/80 backdrop-blur-md fixed top-0 right-0 z-30">
+<div class="flex items-center gap-8">
+<span class="text-lg font-black text-slate-900 dark:text-white">HostelOS</span>
+<nav class="hidden md:flex gap-6">
+<a class="text-slate-500 hover:text-slate-800 text-xs font-semibold uppercase tracking-wider" href="#">System Logs</a>
+<a class="text-indigo-600 font-semibold border-b-2 border-indigo-600 text-xs font-semibold uppercase tracking-wider" href="#">Audit Trail</a>
+</nav>
+</div>
+<div class="flex items-center gap-6">
+<div class="relative">
+<span class="material-symbols-outlined text-slate-400 hover:text-indigo-600 cursor-pointer" data-icon="notifications">notifications</span>
+<span class="absolute -top-1 -right-1 w-2 h-2 bg-indigo-600 rounded-full"></span>
+</div>
+<span class="material-symbols-outlined text-slate-400 hover:text-indigo-600 cursor-pointer" data-icon="help_outline">help_outline</span>
+<button class="bg-primary text-white px-5 py-2 rounded-full text-xs font-bold uppercase tracking-tight hover:opacity-90 transition-opacity active:opacity-70">
+                Save Permissions
+            </button>
+<div class="flex items-center gap-3 pl-4 border-l border-slate-200">
+<div class="text-right">
+<p class="text-xs font-bold text-slate-900 leading-none">Alex Rivera</p>
+<p class="text-[10px] text-slate-500">System Admin</p>
+</div>
+<img alt="Admin Avatar" class="w-8 h-8 rounded-full bg-slate-200 border-2 border-white" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDp5CAPFi726s9JOUTPxC8bkhiC-EsgbOr1nDkNSm__aA5gtHSmWe8NQrkcxYM8N066VCimNlaxPQkE62BGc-2UNdweEeyOPMg_cBOnHcINo8UhrrJkJYI2MW0GqJqxY7QqQTqGpApi9wgscnznwFgJBD1UQ0QikcS6NSDVQmJ9UIUNyreA1bpT3f8hHd02NjfJ4LmMAiA6OdE9NRWj_elm8Y-n-fAV1a9vwu4vJsuyew7K5FduA0IrUA05Kc99LCDaKYaRxVE_5Ko"/>
+</div>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="ml-64 pt-16 min-h-screen bg-surface">
+<div class="max-w-7xl mx-auto p-8">
+<!-- Page Header Section -->
+<div class="mb-10 flex justify-between items-end">
+<div>
+<h2 class="text-4xl font-extrabold text-on-surface tracking-tight mb-2">Role &amp; Access Control</h2>
+<p class="text-on-surface-variant max-w-2xl leading-relaxed">
+                        Define granular access levels for your hostel management ecosystem. Manage system capabilities and visibility for various administrative and end-user tiers.
+                    </p>
+</div>
+<div class="flex gap-3">
+<button class="flex items-center gap-2 px-4 py-2 bg-surface-container text-on-surface-variant font-semibold rounded-xl hover:bg-surface-container-high transition-colors text-sm">
+<span class="material-symbols-outlined text-lg" data-icon="download">download</span>
+                        Export Matrix
+                    </button>
+</div>
+</div>
+<!-- Bento Grid Layout for Roles -->
+<div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-10">
+<!-- Role Card: Super Admin -->
+<div class="bg-surface-container-lowest p-5 rounded-2xl shadow-sm border-2 border-transparent hover:border-primary/20 transition-all group cursor-pointer">
+<div class="flex justify-between items-start mb-4">
+<div class="p-2 bg-primary/10 text-primary rounded-lg group-hover:bg-primary group-hover:text-white transition-colors">
+<span class="material-symbols-outlined" data-icon="shield">shield</span>
+</div>
+<span class="text-xs font-bold bg-surface-container px-2 py-1 rounded-full text-on-surface-variant">Active</span>
+</div>
+<h3 class="font-headline font-bold text-lg mb-1">Super Admin</h3>
+<p class="text-xs text-on-surface-variant mb-4 leading-snug">Full system control and configuration access.</p>
+<div class="flex items-center gap-2">
+<span class="text-sm font-bold text-primary">02</span>
+<span class="text-[10px] text-on-surface-variant uppercase font-medium">Users</span>
+</div>
+</div>
+<!-- Role Card: Admin -->
+<div class="bg-primary text-white p-5 rounded-2xl shadow-xl shadow-indigo-900/10 ring-4 ring-primary/5 cursor-pointer relative overflow-hidden">
+<div class="relative z-10">
+<div class="flex justify-between items-start mb-4">
+<div class="p-2 bg-white/20 text-white rounded-lg">
+<span class="material-symbols-outlined" data-icon="manage_accounts">manage_accounts</span>
+</div>
+<span class="material-symbols-outlined text-white/50" data-icon="check_circle" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<h3 class="font-headline font-bold text-lg mb-1">Admin</h3>
+<p class="text-xs text-white/80 mb-4 leading-snug">Operational oversight and staff management permissions.</p>
+<div class="flex items-center gap-2">
+<span class="text-sm font-bold text-white">08</span>
+<span class="text-[10px] text-white/60 uppercase font-medium">Users</span>
+</div>
+</div>
+<!-- Decorative background element -->
+<div class="absolute -right-4 -bottom-4 w-24 h-24 bg-white/10 rounded-full blur-2xl"></div>
+</div>
+<!-- Role Card: Warden -->
+<div class="bg-surface-container-lowest p-5 rounded-2xl shadow-sm border-2 border-transparent hover:border-primary/20 transition-all group cursor-pointer">
+<div class="flex justify-between items-start mb-4">
+<div class="p-2 bg-surface-container text-on-surface-variant rounded-lg group-hover:bg-primary group-hover:text-white transition-colors">
+<span class="material-symbols-outlined" data-icon="security">security</span>
+</div>
+<span class="text-xs font-bold bg-surface-container px-2 py-1 rounded-full text-on-surface-variant">Active</span>
+</div>
+<h3 class="font-headline font-bold text-lg mb-1">Warden</h3>
+<p class="text-xs text-on-surface-variant mb-4 leading-snug">Day-to-day student oversight and room management.</p>
+<div class="flex items-center gap-2">
+<span class="text-sm font-bold text-primary">14</span>
+<span class="text-[10px] text-on-surface-variant uppercase font-medium">Users</span>
+</div>
+</div>
+<!-- Role Card: Staff -->
+<div class="bg-surface-container-lowest p-5 rounded-2xl shadow-sm border-2 border-transparent hover:border-primary/20 transition-all group cursor-pointer">
+<div class="flex justify-between items-start mb-4">
+<div class="p-2 bg-surface-container text-on-surface-variant rounded-lg group-hover:bg-primary group-hover:text-white transition-colors">
+<span class="material-symbols-outlined" data-icon="support_agent">support_agent</span>
+</div>
+<span class="text-xs font-bold bg-surface-container px-2 py-1 rounded-full text-on-surface-variant">Active</span>
+</div>
+<h3 class="font-headline font-bold text-lg mb-1">Staff</h3>
+<p class="text-xs text-on-surface-variant mb-4 leading-snug">Service processing and basic reporting access.</p>
+<div class="flex items-center gap-2">
+<span class="text-sm font-bold text-primary">42</span>
+<span class="text-[10px] text-on-surface-variant uppercase font-medium">Users</span>
+</div>
+</div>
+<!-- Role Card: Add Custom -->
+<div class="border-2 border-dashed border-outline-variant p-5 rounded-2xl flex flex-col items-center justify-center text-center group hover:bg-surface-container-low transition-all cursor-pointer">
+<div class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-outline group-hover:bg-primary group-hover:text-white transition-all mb-3">
+<span class="material-symbols-outlined" data-icon="add">add</span>
+</div>
+<span class="text-xs font-bold text-on-surface-variant uppercase tracking-widest">Custom Role</span>
+</div>
+</div>
+<!-- Permissions Matrix -->
+<div class="bg-surface-container-lowest rounded-[2rem] shadow-sm overflow-hidden mb-10">
+<div class="p-8 border-b border-surface-container-high flex justify-between items-center bg-white">
+<div>
+<h3 class="text-xl font-bold tracking-tight">Admin Permissions Matrix</h3>
+<p class="text-sm text-on-surface-variant">Configuring access for the <span class="text-primary font-bold">Admin</span> role.</p>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-2 px-3 py-1.5 bg-surface-container rounded-full text-xs font-medium text-on-surface-variant">
+<span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+                            Live Updates Active
+                        </div>
+<button class="text-primary text-sm font-bold hover:underline">Select All Permissions</button>
+</div>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-low/50">
+<th class="py-6 px-8 text-[11px] font-black uppercase tracking-[0.2em] text-outline">Module System</th>
+<th class="py-6 px-4 text-center text-[11px] font-black uppercase tracking-[0.2em] text-outline">View</th>
+<th class="py-6 px-4 text-center text-[11px] font-black uppercase tracking-[0.2em] text-outline">Edit</th>
+<th class="py-6 px-4 text-center text-[11px] font-black uppercase tracking-[0.2em] text-outline">Delete</th>
+<th class="py-6 px-4 text-center text-[11px] font-black uppercase tracking-[0.2em] text-outline">Export</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-surface-container">
+<!-- Row 1 -->
+<tr class="hover:bg-surface-container-lowest transition-colors group">
+<td class="py-6 px-8">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center">
+<span class="material-symbols-outlined" data-icon="school">school</span>
+</div>
+<div>
+<p class="font-bold text-slate-900">Student Management</p>
+<p class="text-xs text-slate-500">Profiles, records, and attendance</p>
+</div>
+</div>
+</td>
+<td class="py-6 px-4 text-center">
+<div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
+<input checked="" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer outline-none right-4 checked:right-0 transition-all duration-300" id="v1" name="toggle" type="checkbox"/>
+<label class="toggle-label block overflow-hidden h-6 rounded-full bg-slate-200 cursor-pointer transition-all duration-300" for="v1"></label>
+</div>
+</td>
+<td class="py-6 px-4 text-center">
+<div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
+<input checked="" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer outline-none right-4 checked:right-0 transition-all duration-300" id="e1" name="toggle" type="checkbox"/>
+<label class="toggle-label block overflow-hidden h-6 rounded-full bg-slate-200 cursor-pointer transition-all duration-300" for="e1"></label>
+</div>
+</td>
+<td class="py-6 px-4 text-center">
+<div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
+<input class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer outline-none right-4 checked:right-0 transition-all duration-300" id="d1" name="toggle" type="checkbox"/>
+<label class="toggle-label block overflow-hidden h-6 rounded-full bg-slate-200 cursor-pointer transition-all duration-300" for="d1"></label>
+</div>
+</td>
+<td class="py-6 px-4 text-center">
+<div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
+<input checked="" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer outline-none right-4 checked:right-0 transition-all duration-300" id="x1" name="toggle" type="checkbox"/>
+<label class="toggle-label block overflow-hidden h-6 rounded-full bg-slate-200 cursor-pointer transition-all duration-300" for="x1"></label>
+</div>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-surface-container-lowest transition-colors group">
+<td class="py-6 px-8">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center">
+<span class="material-symbols-outlined" data-icon="meeting_room">meeting_room</span>
+</div>
+<div>
+<p class="font-bold text-slate-900">Room Allocation</p>
+<p class="text-xs text-slate-500">Mapping students to blocks &amp; rooms</p>
+</div>
+</div>
+</td>
+<td class="py-6 px-4 text-center">
+<div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
+<input checked="" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer outline-none right-4 checked:right-0 transition-all duration-300" id="v2" name="toggle" type="checkbox"/>
+<label class="toggle-label block overflow-hidden h-6 rounded-full bg-slate-200 cursor-pointer transition-all duration-300" for="v2"></label>
+</div>
+</td>
+<td class="py-6 px-4 text-center">
+<div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
+<input checked="" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer outline-none right-4 checked:right-0 transition-all duration-300" id="e2" name="toggle" type="checkbox"/>
+<label class="toggle-label block overflow-hidden h-6 rounded-full bg-slate-200 cursor-pointer transition-all duration-300" for="e2"></label>
+</div>
+</td>
+<td class="py-6 px-4 text-center">
+<div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
+<input class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer outline-none right-4 checked:right-0 transition-all duration-300" id="d2" name="toggle" type="checkbox"/>
+<label class="toggle-label block overflow-hidden h-6 rounded-full bg-slate-200 cursor-pointer transition-all duration-300" for="d2"></label>
+</div>
+</td>
+<td class="py-6 px-4 text-center">
+<div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
+<input class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer outline-none right-4 checked:right-0 transition-all duration-300" id="x2" name="toggle" type="checkbox"/>
+<label class="toggle-label block overflow-hidden h-6 rounded-full bg-slate-200 cursor-pointer transition-all duration-300" for="x2"></label>
+</div>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-surface-container-lowest transition-colors group">
+<td class="py-6 px-8">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 bg-rose-50 text-rose-600 rounded-xl flex items-center justify-center">
+<span class="material-symbols-outlined" data-icon="emergency">emergency</span>
+</div>
+<div>
+<p class="font-bold text-slate-900">Complaint Resolution</p>
+<p class="text-xs text-slate-500">Ticketing and grievance handling</p>
+</div>
+</div>
+</td>
+<td class="py-6 px-4 text-center">
+<div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
+<input checked="" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer outline-none right-4 checked:right-0 transition-all duration-300" id="v3" name="toggle" type="checkbox"/>
+<label class="toggle-label block overflow-hidden h-6 rounded-full bg-slate-200 cursor-pointer transition-all duration-300" for="v3"></label>
+</div>
+</td>
+<td class="py-6 px-4 text-center">
+<div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
+<input checked="" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer outline-none right-4 checked:right-0 transition-all duration-300" id="e3" name="toggle" type="checkbox"/>
+<label class="toggle-label block overflow-hidden h-6 rounded-full bg-slate-200 cursor-pointer transition-all duration-300" for="e3"></label>
+</div>
+</td>
+<td class="py-6 px-4 text-center">
+<div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
+<input checked="" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer outline-none right-4 checked:right-0 transition-all duration-300" id="d3" name="toggle" type="checkbox"/>
+<label class="toggle-label block overflow-hidden h-6 rounded-full bg-slate-200 cursor-pointer transition-all duration-300" for="d3"></label>
+</div>
+</td>
+<td class="py-6 px-4 text-center">
+<div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
+<input class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer outline-none right-4 checked:right-0 transition-all duration-300" id="x3" name="toggle" type="checkbox"/>
+<label class="toggle-label block overflow-hidden h-6 rounded-full bg-slate-200 cursor-pointer transition-all duration-300" for="x3"></label>
+</div>
+</td>
+</tr>
+<!-- Row 4 -->
+<tr class="hover:bg-surface-container-lowest transition-colors group">
+<td class="py-6 px-8">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center">
+<span class="material-symbols-outlined" data-icon="account_balance_wallet">account_balance_wallet</span>
+</div>
+<div>
+<p class="font-bold text-slate-900">Financial Reports</p>
+<p class="text-xs text-slate-500">Revenue tracking and audit logs</p>
+</div>
+</div>
+</td>
+<td class="py-6 px-4 text-center">
+<div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
+<input checked="" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer outline-none right-4 checked:right-0 transition-all duration-300" id="v4" name="toggle" type="checkbox"/>
+<label class="toggle-label block overflow-hidden h-6 rounded-full bg-slate-200 cursor-pointer transition-all duration-300" for="v4"></label>
+</div>
+</td>
+<td class="py-6 px-4 text-center">
+<div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
+<input class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer outline-none right-4 checked:right-0 transition-all duration-300" id="e4" name="toggle" type="checkbox"/>
+<label class="toggle-label block overflow-hidden h-6 rounded-full bg-slate-200 cursor-pointer transition-all duration-300" for="e4"></label>
+</div>
+</td>
+<td class="py-6 px-4 text-center">
+<div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
+<input class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer outline-none right-4 checked:right-0 transition-all duration-300" id="d4" name="toggle" type="checkbox"/>
+<label class="toggle-label block overflow-hidden h-6 rounded-full bg-slate-200 cursor-pointer transition-all duration-300" for="d4"></label>
+</div>
+</td>
+<td class="py-6 px-4 text-center">
+<div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
+<input checked="" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer outline-none right-4 checked:right-0 transition-all duration-300" id="x4" name="toggle" type="checkbox"/>
+<label class="toggle-label block overflow-hidden h-6 rounded-full bg-slate-200 cursor-pointer transition-all duration-300" for="x4"></label>
+</div>
+</td>
+</tr>
+<!-- Row 5 -->
+<tr class="hover:bg-surface-container-lowest transition-colors group">
+<td class="py-6 px-8">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 bg-slate-50 text-slate-600 rounded-xl flex items-center justify-center">
+<span class="material-symbols-outlined" data-icon="inventory_2">inventory_2</span>
+</div>
+<div>
+<p class="font-bold text-slate-900">Inventory</p>
+<p class="text-xs text-slate-500">Hostel assets and supplies</p>
+</div>
+</div>
+</td>
+<td class="py-6 px-4 text-center">
+<div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
+<input checked="" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer outline-none right-4 checked:right-0 transition-all duration-300" id="v5" name="toggle" type="checkbox"/>
+<label class="toggle-label block overflow-hidden h-6 rounded-full bg-slate-200 cursor-pointer transition-all duration-300" for="v5"></label>
+</div>
+</td>
+<td class="py-6 px-4 text-center">
+<div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
+<input class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer outline-none right-4 checked:right-0 transition-all duration-300" id="e5" name="toggle" type="checkbox"/>
+<label class="toggle-label block overflow-hidden h-6 rounded-full bg-slate-200 cursor-pointer transition-all duration-300" for="e5"></label>
+</div>
+</td>
+<td class="py-6 px-4 text-center">
+<div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
+<input class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer outline-none right-4 checked:right-0 transition-all duration-300" id="d5" name="toggle" type="checkbox"/>
+<label class="toggle-label block overflow-hidden h-6 rounded-full bg-slate-200 cursor-pointer transition-all duration-300" for="d5"></label>
+</div>
+</td>
+<td class="py-6 px-4 text-center">
+<div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
+<input class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer outline-none right-4 checked:right-0 transition-all duration-300" id="x5" name="toggle" type="checkbox"/>
+<label class="toggle-label block overflow-hidden h-6 rounded-full bg-slate-200 cursor-pointer transition-all duration-300" for="x5"></label>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="p-8 bg-surface-container-low flex justify-between items-center">
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-2">
+<span class="w-3 h-3 rounded-sm bg-primary"></span>
+<span class="text-xs font-semibold text-on-surface-variant">Active Permission</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="w-3 h-3 rounded-sm bg-slate-300"></span>
+<span class="text-xs font-semibold text-on-surface-variant">Restricted</span>
+</div>
+</div>
+<div class="flex gap-4">
+<button class="px-6 py-2.5 bg-white text-slate-700 font-bold text-sm rounded-xl border border-slate-200 hover:bg-slate-50 transition-colors">Discard Changes</button>
+<button class="px-6 py-2.5 bg-primary text-white font-bold text-sm rounded-xl hover:opacity-90 shadow-lg shadow-primary/20 transition-all">Apply Role Changes</button>
+</div>
+</div>
+</div>
+<!-- Descriptive Section for Roles -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-20">
+<div class="bg-indigo-900 rounded-[2rem] p-8 text-white relative overflow-hidden">
+<div class="relative z-10">
+<h4 class="text-2xl font-bold mb-4">Hierarchical Structure</h4>
+<p class="text-indigo-200 text-sm leading-relaxed mb-6">
+                            Roles in HostelOS follow an inheritance model. Higher tiers like Super Admin automatically inherit capabilities of lower tiers while maintaining exclusive access to administrative modules like Finance and System Logs.
+                        </p>
+<div class="space-y-4">
+<div class="flex items-center gap-4 bg-white/10 p-4 rounded-2xl">
+<span class="material-symbols-outlined text-indigo-300" data-icon="hub">hub</span>
+<div>
+<p class="font-bold text-sm">Role Dependencies</p>
+<p class="text-xs text-indigo-300">Student roles are isolated from all staff management modules.</p>
+</div>
+</div>
+<div class="flex items-center gap-4 bg-white/10 p-4 rounded-2xl">
+<span class="material-symbols-outlined text-indigo-300" data-icon="lock_open">lock_open</span>
+<div>
+<p class="font-bold text-sm">MFA Enforcement</p>
+<p class="text-xs text-indigo-300">Warden and higher roles require mandatory 2FA activation.</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Decorative element -->
+<div class="absolute -right-20 -bottom-20 w-80 h-80 bg-indigo-500/20 rounded-full blur-[100px]"></div>
+</div>
+<div class="bg-surface-container-high rounded-[2rem] p-8 border border-white/40">
+<div class="flex items-center gap-3 mb-6">
+<span class="material-symbols-outlined text-primary" data-icon="info" style="font-variation-settings: 'FILL' 1;">info</span>
+<h4 class="text-xl font-bold text-slate-900">Permission Best Practices</h4>
+</div>
+<ul class="space-y-4">
+<li class="flex gap-4">
+<div class="mt-1 w-5 h-5 rounded-full bg-white flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-xs text-primary" data-icon="done">done</span>
+</div>
+<div>
+<p class="text-sm font-bold text-slate-900">Principle of Least Privilege</p>
+<p class="text-xs text-slate-500 leading-relaxed">Only grant the minimum access necessary for a user to complete their job function.</p>
+</div>
+</li>
+<li class="flex gap-4">
+<div class="mt-1 w-5 h-5 rounded-full bg-white flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-xs text-primary" data-icon="done">done</span>
+</div>
+<div>
+<p class="text-sm font-bold text-slate-900">Periodic Access Reviews</p>
+<p class="text-xs text-slate-500 leading-relaxed">System logs should be reviewed quarterly to ensure role allocations remain accurate.</p>
+</div>
+</li>
+<li class="flex gap-4">
+<div class="mt-1 w-5 h-5 rounded-full bg-white flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-xs text-primary" data-icon="done">done</span>
+</div>
+<div>
+<p class="text-sm font-bold text-slate-900">Audit Trail Integrity</p>
+<p class="text-xs text-slate-500 leading-relaxed">All changes to the permissions matrix are logged in the System Audit Trail with a timestamp.</p>
+</div>
+</li>
+</ul>
+<button class="mt-8 text-primary font-bold text-sm flex items-center gap-2 hover:translate-x-1 transition-transform">
+                        Read full security documentation
+                        <span class="material-symbols-outlined text-sm" data-icon="arrow_forward">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+</main>
+<!-- Success Notification Toast (Example for UI richness) -->
+<div class="fixed bottom-8 right-8 bg-inverse-surface text-inverse-on-surface px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-4 z-50">
+<span class="material-symbols-outlined text-emerald-400" data-icon="check_circle" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<div class="pr-8">
+<p class="font-bold text-sm leading-tight">Changes Saved Successfully</p>
+<p class="text-xs text-slate-400">Permission matrix updated for Admin role.</p>
+</div>
+<button class="text-slate-400 hover:text-white">
+<span class="material-symbols-outlined text-sm" data-icon="close">close</span>
+</button>
+</div>
+</body></html>
