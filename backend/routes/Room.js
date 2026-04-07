@@ -264,13 +264,13 @@ router.delete("/:id", auth, authorize("admin"), async (req, res) => {
     }
 
     // Check if room has occupants
+    // If room has occupants, deallocate them
     const occupiedBeds = room.beds.filter((bed) => bed.isOccupied);
     if (occupiedBeds.length > 0) {
-      return res.status(400).json({
-        success: false,
-        message:
-          "Cannot delete room with occupants. Please relocate students first.",
-      });
+      const occupantIds = occupiedBeds.map(b => b.occupant).filter(Boolean);
+      if (occupantIds.length > 0) {
+          await User.updateMany({ _id: { $in: occupantIds } }, { room: null });
+      }
     }
 
     await Room.findByIdAndDelete(req.params.id);

@@ -2,6 +2,11 @@
 const cron = require("node-cron");
 const paymentNotificationService = require("./paymentNotificationService");
 const Payment = require("../models/payment");
+const {
+  getFeeConfigForPayment,
+  calendarDaysOverdue,
+  computeLateFeeAmount,
+} = require("../utils/feeConfigHelpers");
 
 class PaymentScheduler {
   init() {
@@ -27,12 +32,12 @@ class PaymentScheduler {
       }
     });
 
-    // Generate late fees for overdue payments every day at midnight
+    // Recalculate late fees daily (admin-configured ₹ per day after due date)
     cron.schedule("0 0 * * *", async () => {
-      console.log("💰 Running late fee generation job...");
+      console.log("💰 Running late fee recalculation job...");
       try {
         await this.generateLateFees();
-        console.log("✅ Late fees generated successfully");
+        console.log("✅ Late fees recalculated successfully");
       } catch (error) {
         console.error("❌ Error generating late fees:", error);
       }
@@ -41,47 +46,35 @@ class PaymentScheduler {
     console.log("📅 Payment scheduler initialized with the following jobs:");
     console.log("  - Daily payment reminders: 9:00 AM");
     console.log("  - Weekly overdue alerts: Monday 10:00 AM");
-    console.log("  - Late fee generation: Daily 12:00 AM");
+    console.log("  - Late fee recalculation: Daily 12:00 AM (uses FeeConfig.lateFeePerDay)");
   }
 
   async generateLateFees() {
     try {
+      const now = new Date();
       const overduePayments = await Payment.find({
         status: "pending",
-        dueDate: { $lt: new Date() },
-        lateFee: 0, // Only apply late fee once
+        dueDate: { $lt: now },
       });
 
+      let updated = 0;
       for (const payment of overduePayments) {
-        const daysOverdue = Math.floor(
-          (new Date() - new Date(payment.dueDate)) / (1000 * 60 * 60 * 24)
-        );
+        // Checkout amount is fixed once a Razorpay order exists
+        if (payment.razorpayOrderId) continue;
 
-        // Calculate late fee based on days overdue
-        let lateFee = 0;
-        if (daysOverdue >= 1 && daysOverdue <= 7) {
-          lateFee = 50; // ₹50 for 1-7 days
-        } else if (daysOverdue >= 8 && daysOverdue <= 15) {
-          lateFee = 100; // ₹100 for 8-15 days
-        } else if (daysOverdue >= 16 && daysOverdue <= 30) {
-          lateFee = 200; // ₹200 for 16-30 days
-        } else if (daysOverdue > 30) {
-          lateFee = 500; // ₹500 for more than 30 days
-        }
+        const cfg = await getFeeConfigForPayment(payment);
+        const daysOverdue = calendarDaysOverdue(payment.dueDate, now);
+        const lateFee = computeLateFeeAmount(daysOverdue, cfg.lateFeePerDay);
+        const prev = Number(payment.lateFee) || 0;
+        if (Math.abs(prev - lateFee) < 0.005) continue;
 
-        if (lateFee > 0) {
-          payment.lateFee = lateFee;
-          payment.description = `${payment.description} - Late fee applied: ₹${lateFee}`;
-          await payment.save();
-
-          console.log(
-            `Late fee of ₹${lateFee} applied to payment ${payment._id} (${daysOverdue} days overdue)`
-          );
-        }
+        payment.lateFee = lateFee;
+        await payment.save();
+        updated++;
       }
 
       console.log(
-        `Processed ${overduePayments.length} overdue payments for late fees`
+        `Processed ${overduePayments.length} overdue pending payments; updated late fees on ${updated}`
       );
     } catch (error) {
       console.error("Error generating late fees:", error);

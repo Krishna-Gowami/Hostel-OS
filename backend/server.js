@@ -24,6 +24,10 @@ const reportRoutes = require("./routes/ReportR");
 const vacationRequestRoutes = require("./routes/vacationRequestRoutes");
 const chatbotRoutes = require("./routes/chatbotR");
 const paymentWebhook = require("./routes/paymentWebhook");
+const feeConfigRoutes = require("./routes/feeConfigR");
+const announcementRoutes = require("./routes/announcementR");
+const documentRoutes = require("./routes/documentRoutes");
+const settingsRoutes = require("./routes/settingsRoutes");
 
 const app = express();
 const server = http.createServer(app);
@@ -183,6 +187,11 @@ app.use("/api/reports", reportRoutes);
 app.use("/api/mess-feedback", messFeedbackRoutes);
 app.use("/api/vacation-requests", vacationRequestRoutes);
 app.use("/api/chatbot", chatbotRoutes);
+app.use("/api/fee-config", feeConfigRoutes);
+app.use("/api/announcements", announcementRoutes);
+app.use("/api/documents", documentRoutes);
+app.use("/api/settings", settingsRoutes);
+app.use("/uploads", express.static(require("path").join(__dirname, "uploads")));
 
 // Health check
 app.get("/api/health", (req, res) => {

@@ -20,6 +20,7 @@ const paymentSchema = new mongoose.Schema(
       type: String,
       enum: [
         "monthly_rent",
+        "full_month",       // collective payment covering all fees for a month
         "security_deposit",
         "maintenance",
         "fine",
@@ -73,6 +74,18 @@ const paymentSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
+    /** Calendar year of the billing period (e.g. 2026 for March 2026). */
+    billingYear: {
+      type: Number,
+      min: 2000,
+      max: 2100,
+    },
+    /** 0–11 JavaScript month index for the billing period. */
+    billingMonth: {
+      type: Number,
+      min: 0,
+      max: 11,
+    },
   },
   {
     timestamps: true,
@@ -84,6 +97,7 @@ paymentSchema.index({ user: 1 });
 paymentSchema.index({ status: 1 });
 paymentSchema.index({ paymentType: 1 });
 paymentSchema.index({ dueDate: 1 });
+paymentSchema.index({ user: 1, billingYear: 1, billingMonth: 1, paymentType: 1 });
 
 // Calculate final amount before saving
 paymentSchema.pre("save", function (next) {

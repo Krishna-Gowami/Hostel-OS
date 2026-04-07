@@ -17,14 +17,14 @@ router.post("/", auth, authorize("student"), async (req, res) => {
     console.log("User:", req.user._id, "Role:", req.user.role);
     console.log("Request body:", req.body);
 
-    const { reason } = req.body;
+    const { reason, leaveType, fromDate, toDate, parentNumber } = req.body;
 
     // Validate required fields
-    if (!reason) {
-      console.log("❌ Reason not provided");
+    if (!reason || !leaveType || !fromDate || !toDate || !parentNumber) {
+      console.log("❌ Required fields missing");
       return res.status(400).json({
         success: false,
-        message: "Reason is required",
+        message: "All fields parameters (reason, leaveType, from/to Dates, and parentNumber) are required",
       });
     }
 
@@ -53,6 +53,10 @@ router.post("/", auth, authorize("student"), async (req, res) => {
     const vacationRequest = new VacationRequest({
       student: req.user._id,
       room: req.user.room,
+      leaveType,
+      fromDate,
+      toDate,
+      parentNumber,
       reason,
       status: "pending",
     });
@@ -163,7 +167,7 @@ router.get("/my-request", auth, authorize("student"), async (req, res) => {
 // @route   GET /api/vacation-requests/pending
 // @desc    Get all pending vacation requests (Admin/Warden)
 // @access  Admin/Warden
-router.get("/pending", auth, authorize("admin", "warden"), async (req, res) => {
+router.get("/pending", auth, authorize("admin", "warden", "staff"), async (req, res) => {
   try {
     const pendingRequests = await VacationRequest.find({
       status: "pending",
@@ -283,7 +287,7 @@ router.post(
 router.post(
   "/:id/approve-warden",
   auth,
-  authorize("warden"),
+  authorize("warden", "staff"),
   async (req, res) => {
     try {
       const { comments } = req.body;
@@ -304,7 +308,7 @@ router.post(
         });
       }
 
-      // Update warden approval
+      // Update warden/staff approval
       vacationRequest.wardenApproval = {
         warden: req.user._id,
         approved: true,
@@ -312,14 +316,9 @@ router.post(
         comments,
       };
 
-      // Check if both admin and warden have approved
-      if (
-        vacationRequest.adminApproval?.approved &&
-        vacationRequest.wardenApproval.approved
-      ) {
-        vacationRequest.status = "approved";
-        vacationRequest.finalApprovalDate = new Date();
-      }
+      // Warden/staff approval is sufficient to approve the request
+      vacationRequest.status = "approved";
+      vacationRequest.finalApprovalDate = new Date();
 
       await vacationRequest.save();
 
@@ -371,7 +370,7 @@ router.post(
 router.post(
   "/:id/reject",
   auth,
-  authorize("admin", "warden"),
+  authorize("admin", "warden", "staff"),
   async (req, res) => {
     try {
       const { reason: rejectionReason } = req.body;
@@ -407,13 +406,18 @@ router.post(
       await vacationRequest.populate("student", "name email studentId");
       await vacationRequest.populate("room", "roomNumber building floor");
 
-      // Send notification to student
-      const student = await User.findById(vacationRequest.student);
-      if (student) {
-        await emailService.sendVacationRequestRejectionNotification(
-          student,
-          vacationRequest
-        );
+      // Send notification to student (best-effort — don't let email failure block rejection)
+      try {
+        const student = await User.findById(vacationRequest.student._id || vacationRequest.student);
+        if (student && emailService.sendVacationRequestApprovalNotification) {
+          await emailService.sendVacationRequestApprovalNotification(
+            student,
+            vacationRequest,
+            "rejected"
+          );
+        }
+      } catch (emailErr) {
+        console.error("❌ Rejection email failed (non-fatal):", emailErr.message);
       }
 
       // Emit real-time notification
@@ -448,7 +452,7 @@ router.post(
 // @route   GET /api/vacation-requests
 // @desc    Get all vacation requests (pagination, filters)
 // @access  Admin/Warden
-router.get("/", auth, authorize("admin", "warden"), async (req, res) => {
+router.get("/", auth, authorize("admin", "warden", "staff"), async (req, res) => {
   try {
     const { status, page = 1, limit = 10 } = req.query;
     const filter = {};

@@ -44,6 +44,7 @@ const api = {
   // ─── Dashboard ───
   getDashboardStats: () => axiosInstance.get('/dashboard/stats'),
   getRecentActivities: (limit = 10) => axiosInstance.get(`/dashboard/recent-activities?limit=${limit}`),
+  getDashboardNotifications: () => axiosInstance.get('/dashboard/notifications'),
 
   // ─── Users ───
   getAllUsers: (params) => axiosInstance.get('/users', { params }),
@@ -98,12 +99,36 @@ const api = {
   // ─── Vacation / Leave ───
   getVacationRequests: (params) => axiosInstance.get('/vacation-requests', { params }),
   createVacationRequest: (data) => axiosInstance.post('/vacation-requests', data),
-  approveVacationRequest: (id) => axiosInstance.put(`/vacation-requests/${id}/approve`),
-  rejectVacationRequest: (id, data) => axiosInstance.put(`/vacation-requests/${id}/reject`, data),
+  approveVacationRequestAsWarden: (id, data) => axiosInstance.post(`/vacation-requests/${id}/approve-warden`, data),
+  approveVacationRequestAsAdmin: (id, data) => axiosInstance.post(`/vacation-requests/${id}/approve-admin`, data),
+  rejectVacationRequest: (id, data) => axiosInstance.post(`/vacation-requests/${id}/reject`, data),
 
   // ─── Gates / Entry-Exit ───
   getEntryExitLogs: (params) => axiosInstance.get('/gates/entry-exit-logs', { params }),
   getGateStats: () => axiosInstance.get('/gates/stats'),
+
+  // ─── Fee Config ───
+  getFeeConfig: (year) => axiosInstance.get('/fee-config', { params: year ? { year } : {} }),
+
+  // ─── Announcements ───
+  getAnnouncements: (params) => axiosInstance.get('/announcements', { params }),
+  createAnnouncement: (data) => axiosInstance.post('/announcements', data),
+  deleteAnnouncement: (id) => axiosInstance.delete(`/announcements/${id}`),
+
+  // ─── Documents ───
+  getDocuments: () => axiosInstance.get('/documents'),
+  uploadDocument: (formData) => axiosInstance.post('/documents', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
+  updateDocument: (id, data) => axiosInstance.put(`/documents/${id}`, data),
+  deleteDocument: (id) => axiosInstance.delete(`/documents/${id}`),
+  downloadDocument: (id) => axiosInstance.get(`/documents/${id}/download`, { responseType: 'blob' }),
+
+  // ─── Settings ───
+  getSettings: () => axiosInstance.get('/settings'),
+  saveSettings: (data) => axiosInstance.put('/settings', data),
+
+  // ─── Visitors (extra) ───
+  cancelExpiredVisitors: () => axiosInstance.put('/visitors/cancel-expired'),
+
 
   // ─── Generic ───
   get: (url, config) => axiosInstance.get(url, config),

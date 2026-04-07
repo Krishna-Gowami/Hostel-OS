@@ -205,6 +205,13 @@ router.put("/:id", auth, async (req, res) => {
     if (req.user.role !== "admin") {
       delete req.body.isActive;
       delete req.body.role;
+      delete req.body.fatherName;
+      delete req.body.motherName;
+      delete req.body.dateOfBirth;
+      delete req.body.governmentId;
+      delete req.body.studentId;
+      delete req.body.admissionNumber;
+      delete req.body.parentGuardianContact;
     }
 
     // Don't allow password updates through this route

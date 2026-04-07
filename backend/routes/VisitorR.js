@@ -473,4 +473,20 @@ router.post(
   }
 );
 
+// @route   PUT /api/visitors/cancel-expired
+// @desc    Auto-cancel visitors whose visit date is past and still waiting_approval
+// @access  Admin/Warden
+router.put('/cancel-expired', auth, authorize('admin', 'warden'), async (req, res) => {
+  try {
+    const result = await Visitor.updateMany(
+      { status: 'waiting_approval', expectedCheckOutTime: { $lt: new Date() } },
+      { $set: { status: 'rejected', rejectionReason: 'Auto-cancelled: visit date passed' } }
+    )
+    res.json({ success: true, cancelledCount: result.modifiedCount, message: `${result.modifiedCount} expired applications cancelled` })
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Server error' })
+  }
+})
+
 module.exports = router;
+

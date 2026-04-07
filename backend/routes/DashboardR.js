@@ -63,15 +63,34 @@ router.get("/stats", auth, async (req, res) => {
           // Room statistics
           Room.aggregate([
             {
+              $project: {
+                status: 1,
+                capacity: 1,
+                occupiedBeds: {
+                  $size: {
+                    $filter: {
+                      input: { $ifNull: ["$beds", []] },
+                      cond: { $eq: ["$$this.isOccupied", true] },
+                    },
+                  },
+                },
+              },
+            },
+            {
               $group: {
                 _id: null,
                 totalRooms: { $sum: 1 },
                 totalCapacity: { $sum: "$capacity" },
-                totalOccupants: { $sum: { $size: "$occupants" } },
+                totalOccupants: { $sum: "$occupiedBeds" },
                 availableRooms: {
                   $sum: {
                     $cond: [
-                      { $lt: [{ $size: "$occupants" }, "$capacity"] },
+                      {
+                        $and: [
+                          { $ne: ["$status", "maintenance"] },
+                          { $lt: ["$occupiedBeds", "$capacity"] },
+                        ],
+                      },
                       1,
                       0,
                     ],
@@ -316,8 +335,8 @@ router.get("/recent-activities", auth, async (req, res) => {
       activities = [
         ...recentComplaints.map((c) => ({
           type: "complaint",
-          title: `New Complaint - ${c.title}`,
-          description: `By: ${c.user.name} (${c.user.studentId})`,
+          title: `New Complaint - ${c.title || 'Untitled'}`,
+          description: c.user ? `By: ${c.user.name} (${c.user.studentId || ''})` : 'By: Unknown',
           timestamp: c.createdAt,
           status: c.status,
           priority: c.priority,
@@ -325,15 +344,15 @@ router.get("/recent-activities", auth, async (req, res) => {
         ...recentVisitors.map((v) => ({
           type: "visitor",
           title: `Visitor Registration - ${v.name}`,
-          description: `For: ${v.visitingStudent.name} (${v.visitingStudent.studentId})`,
+          description: v.visitingStudent ? `For: ${v.visitingStudent.name} (${v.visitingStudent.studentId || ''})` : 'For: Unknown',
           timestamp: v.createdAt,
           status: v.status,
         })),
         ...recentPayments.map((p) => ({
           type: "payment",
-          title: `Pending Payment - ${p.paymentType}`,
-          description: `${p.user.name} - ₹${p.amount}`,
-          timestamp: p.dueDate,
+          title: `Pending Payment - ${p.paymentType || 'rent'}`,
+          description: p.user ? `${p.user.name} - ₹${p.amount}` : `₹${p.amount}`,
+          timestamp: p.dueDate || p.createdAt,
           status: "pending",
         })),
       ];

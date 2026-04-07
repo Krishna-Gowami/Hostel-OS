@@ -8,8 +8,17 @@ const { auth, authorize } = require("../middleware/authmiddleware");
 const paymentNotificationService = require("../services/paymentNotificationService");
 const paymentScheduler = require("../services/paymentScheduler");
 const emailService = require("../services/emailService");
+const {
+  getFeeConfigForBillingMonth,
+  dueDateForBillingMonth,
+  calendarDaysOverdue,
+  expectedBaseAmount,
+  computeLateFeeAmount,
+} = require("../utils/feeConfigHelpers");
 
 const router = express.Router();
+
+const AMOUNT_TOLERANCE = 1.51; // ₹ rounding vs client
 
 function getRazorpay() {
   const keyId = process.env.RAZORPAY_KEY_ID;
@@ -32,27 +41,78 @@ function getRazorpay() {
 // @access  Private
 router.post("/create-order", auth, async (req, res) => {
   try {
-    const { amount, paymentType, description, roomId } = req.body;
+    const { amount, paymentType, description, roomId, year, month } = req.body;
 
     // Validate required fields
-    if (!amount || !paymentType) {
+    if (amount == null || !paymentType) {
       return res.status(400).json({
         success: false,
         message: "Amount and payment type are required",
       });
     }
 
+    const now = new Date();
+    const billingY =
+      year != null ? Number(year) : now.getFullYear();
+    const billingM =
+      month != null ? Number(month) : now.getMonth();
+
+    if (
+      !Number.isFinite(billingY) ||
+      !Number.isFinite(billingM) ||
+      billingY < 2000 ||
+      billingY > 2100 ||
+      billingM < 0 ||
+      billingM > 11
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Valid billing year and month (0–11) are required",
+      });
+    }
+
+    const cfg = await getFeeConfigForBillingMonth(billingY, billingM);
+    const dueDate = dueDateForBillingMonth(
+      billingY,
+      billingM,
+      cfg.dueDayOfMonth
+    );
+
+    const base = parseFloat(amount);
+    if (!Number.isFinite(base) || base < 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid amount",
+      });
+    }
+
+    const expected = expectedBaseAmount(cfg, paymentType);
+    if (expected > 0 && Math.abs(base - expected) > AMOUNT_TOLERANCE) {
+      return res.status(400).json({
+        success: false,
+        message: `Amount must match admin fee for this period (expected ₹${expected})`,
+      });
+    }
+
+    const daysLate = calendarDaysOverdue(dueDate, now);
+    const lateFee = computeLateFeeAmount(daysLate, cfg.lateFeePerDay);
+    const chargeTotal = base + lateFee;
+
     // Create payment record with pending status
     const paymentData = {
       user: req.user._id,
-      amount: parseFloat(amount),
+      amount: base,
       paymentType,
-      description: description || `${paymentType.replace("_", " ")} payment`,
+      description:
+        (description && String(description).slice(0, 200)) ||
+        `${paymentType.replace(/_/g, " ")} payment`,
       status: "pending",
-      dueDate: new Date(),
-      lateFee: 0,
+      dueDate,
+      billingYear: billingY,
+      billingMonth: billingM,
+      lateFee,
       discount: 0,
-      finalAmount: parseFloat(amount), // Set finalAmount equal to amount initially
+      finalAmount: chargeTotal,
     };
 
     if (roomId) {
@@ -62,15 +122,17 @@ router.post("/create-order", auth, async (req, res) => {
     const payment = new Payment(paymentData);
     await payment.save();
 
-    // Create Razorpay order
+    // Create Razorpay order (charge includes per-day late fee if past due)
     const options = {
-      amount: Math.round(parseFloat(amount) * 100), // Convert to paise
+      amount: Math.round(chargeTotal * 100), // paise
       currency: "INR",
       receipt: `rcpt_${payment._id}`,
       notes: {
         paymentId: payment._id.toString(),
         userId: req.user._id.toString(),
         paymentType: paymentType,
+        billingYear: String(billingY),
+        billingMonth: String(billingM),
       },
     };
 
@@ -136,6 +198,13 @@ router.post("/verify", auth, async (req, res) => {
       return res.status(404).json({
         success: false,
         message: "Payment record not found",
+      });
+    }
+
+    if (payment.user.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied",
       });
     }
 
@@ -211,13 +280,136 @@ router.post("/verify", auth, async (req, res) => {
 
 // Webhook is registered in server.js with express.raw() for correct signature verification.
 
+// @route   POST /api/payments/bulk-assign
+// @desc    Create bulk payments for students by floor/year
+// @access  Admin/Warden
+router.post(
+  "/bulk-assign",
+  auth,
+  authorize("admin", "warden"),
+  async (req, res) => {
+    try {
+      const {
+        floor,
+        collegeYear,
+        amount,
+        paymentType,
+        description,
+        dueDate,
+        billingYear,
+        billingMonth,
+      } = req.body;
+
+      if (!amount || !paymentType) {
+        return res.status(400).json({ success: false, message: "Amount and Payment Type are required." });
+      }
+
+      let resolvedDueDate = dueDate ? new Date(dueDate) : null;
+      let billingY;
+      let billingM;
+
+      if (billingYear != null && billingMonth != null) {
+        billingY = Number(billingYear);
+        billingM = Number(billingMonth);
+        if (
+          !Number.isFinite(billingY) ||
+          !Number.isFinite(billingM) ||
+          billingM < 0 ||
+          billingM > 11
+        ) {
+          return res.status(400).json({
+            success: false,
+            message: "Invalid billingYear or billingMonth (month 0–11).",
+          });
+        }
+        const cfg = await getFeeConfigForBillingMonth(billingY, billingM);
+        resolvedDueDate = dueDateForBillingMonth(
+          billingY,
+          billingM,
+          cfg.dueDayOfMonth
+        );
+      } else if (!resolvedDueDate || Number.isNaN(resolvedDueDate.getTime())) {
+        resolvedDueDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+      }
+
+      // Find users matching collegeYear or floor
+      let userQuery = { role: "student", isActive: true };
+      
+      if (collegeYear) {
+        userQuery.collegeYear = Number(collegeYear);
+      }
+
+      let usersToCharge = [];
+
+      // If floor is specified, we must find users residing on that floor
+      if (floor) {
+        const Room = require("../models/room");
+        const roomsOnFloor = await Room.find({ floor: Number(floor) });
+        const roomIds = roomsOnFloor.map((r) => r._id);
+        
+        userQuery.room = { $in: roomIds };
+      }
+
+      const User = require("../models/db"); // Using main db.js which exports User model
+      usersToCharge = await User.find(userQuery);
+
+      if (usersToCharge.length === 0) {
+        return res.status(404).json({ success: false, message: "No active students found matching criteria." });
+      }
+
+      const amt = Number(amount);
+      const paymentDocs = usersToCharge.map((user) => ({
+        user: user._id,
+        room: user.room,
+        amount: amt,
+        paymentType,
+        paymentMethod: "razorpay", // Typically these will be pending online payments
+        description,
+        dueDate: resolvedDueDate,
+        billingYear: billingY,
+        billingMonth: billingM,
+        lateFee: 0,
+        discount: 0,
+        status: "pending",
+        finalAmount: amt,
+      }));
+
+      // Bulk insert
+      const Payment = require("../models/payment"); // Ensuring we have access if not globally scoped
+      const insertedPayments = await Payment.insertMany(paymentDocs);
+
+      // Optionally emit sockets or send emails (omitted for brevity)
+
+      res.status(201).json({
+        success: true,
+        message: `Successfully created ${insertedPayments.length} payments.`,
+        count: insertedPayments.length,
+      });
+    } catch (error) {
+      console.error("Bulk payment error:", error);
+      res.status(500).json({
+        success: false,
+        message: "Server error during bulk payment assignment.",
+      });
+    }
+  }
+);
+
 // @route   POST /api/payments
 // @desc    Create manual payment (Admin/Warden)
 // @access  Admin/Warden
 router.post("/", auth, authorize("admin", "warden"), async (req, res) => {
   try {
-    const { userId, amount, paymentType, paymentMethod, description, dueDate } =
-      req.body;
+    const {
+      userId,
+      amount,
+      paymentType,
+      paymentMethod,
+      description,
+      dueDate,
+      billingYear,
+      billingMonth,
+    } = req.body;
 
     const user = await User.findById(userId);
     if (!user) {
@@ -227,17 +419,33 @@ router.post("/", auth, authorize("admin", "warden"), async (req, res) => {
       });
     }
 
+    let resolvedDue = dueDate ? new Date(dueDate) : null;
+    let billingY;
+    let billingM;
+    if (billingYear != null && billingMonth != null) {
+      billingY = Number(billingYear);
+      billingM = Number(billingMonth);
+      const cfg = await getFeeConfigForBillingMonth(billingY, billingM);
+      resolvedDue = dueDateForBillingMonth(billingY, billingM, cfg.dueDayOfMonth);
+    } else if (!resolvedDue || Number.isNaN(resolvedDue.getTime())) {
+      resolvedDue = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+    }
+
+    const base = parseFloat(amount);
     const payment = new Payment({
       user: userId,
       room: user.room,
-      amount,
+      amount: base,
       paymentType,
       paymentMethod,
       description,
-      dueDate: dueDate || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+      dueDate: resolvedDue,
+      billingYear: billingY,
+      billingMonth: billingM,
+      lateFee: 0,
+      discount: 0,
       status: paymentMethod === "cash" ? "completed" : "pending",
       paidDate: paymentMethod === "cash" ? new Date() : undefined,
-      finalAmount: parseFloat(amount),
     });
 
     await payment.save();
@@ -460,8 +668,16 @@ router.get("/stats/my-summary", auth, async (req, res) => {
 // @access  Admin/Warden
 router.post("/manual", auth, authorize("admin", "warden"), async (req, res) => {
   try {
-    const { userId, amount, paymentType, paymentMethod, description, roomId } =
-      req.body;
+    const {
+      userId,
+      amount,
+      paymentType,
+      paymentMethod,
+      description,
+      roomId,
+      billingYear,
+      billingMonth,
+    } = req.body;
 
     // Validate required fields
     if (!userId || !amount || !paymentType || !paymentMethod) {
@@ -481,18 +697,32 @@ router.post("/manual", auth, authorize("admin", "warden"), async (req, res) => {
       });
     }
 
+    let dueD = new Date();
+    let billingY;
+    let billingM;
+    if (billingYear != null && billingMonth != null) {
+      billingY = Number(billingYear);
+      billingM = Number(billingMonth);
+      const cfg = await getFeeConfigForBillingMonth(billingY, billingM);
+      dueD = dueDateForBillingMonth(billingY, billingM, cfg.dueDayOfMonth);
+    }
+
+    const base = parseFloat(amount);
     // Create payment record
     const paymentData = {
       user: userId,
-      amount: parseFloat(amount),
+      amount: base,
       paymentType,
       paymentMethod,
       description:
         description || `Manual ${paymentType.replace("_", " ")} payment`,
       status: "completed",
-      dueDate: new Date(),
+      dueDate: dueD,
+      billingYear: billingY,
+      billingMonth: billingM,
+      lateFee: 0,
+      discount: 0,
       paidDate: new Date(),
-      finalAmount: parseFloat(amount),
     };
 
     if (roomId) {

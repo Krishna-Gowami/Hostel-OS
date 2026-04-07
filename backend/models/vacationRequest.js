@@ -12,6 +12,23 @@ const vacationRequestSchema = new mongoose.Schema(
       ref: "Room",
       required: [true, "Room is required"],
     },
+    leaveType: {
+      type: String,
+      enum: ["Half Day", "Full Day", "Multiple Days"],
+      required: [true, "Leave type is required"],
+    },
+    fromDate: {
+      type: Date,
+      required: [true, "From date is required"],
+    },
+    toDate: {
+      type: Date,
+      required: [true, "To date is required"],
+    },
+    parentNumber: {
+      type: String,
+      required: [true, "Parent's contact number is required"],
+    },
     reason: {
       type: String,
       required: [true, "Reason for vacation is required"],

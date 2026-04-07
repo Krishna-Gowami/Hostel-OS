@@ -23,13 +23,14 @@ import StudentNotifications from './pages/student/Notifications'
 
 // Staff / Warden Pages
 import StaffDashboard from './pages/staff/Dashboard'
-import StaffComplaints from './pages/staff/ComplaintManagement'
-import StaffRooms from './pages/staff/RoomAllocation'
-import StaffVisitors from './pages/staff/VisitorApproval'
-import StaffPayments from './pages/staff/PaymentOverview'
-import StaffStudents from './pages/staff/StudentRecords'
-import StaffLeaveRequests from './pages/staff/LeaveRequests'
-import StaffReports from './pages/staff/Reports'
+import StaffComplaints from './pages/admin/Complaints'
+import StaffRooms from './pages/admin/Rooms'
+import StaffVisitors from './pages/admin/VisitorManagement'
+import StaffPayments from './pages/admin/PaymentManagement'
+import StaffStudents from './pages/admin/UserManagement'
+import StaffLeaveRequests from './pages/admin/Applications'
+import StaffReports from './pages/admin/Reports'
+import StaffDocuments from './pages/admin/Documents'
 
 // Admin Pages
 import AdminDashboard from './pages/admin/Dashboard'
@@ -97,6 +98,7 @@ export default function App() {
               <Route path="/staff/students" element={<StaffStudents />} />
               <Route path="/staff/leave-requests" element={<StaffLeaveRequests />} />
               <Route path="/staff/reports" element={<StaffReports />} />
+              <Route path="/staff/documents" element={<StaffDocuments />} />
             </Route>
           </Route>
 

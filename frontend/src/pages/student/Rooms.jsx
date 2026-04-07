@@ -14,11 +14,13 @@ export default function StudentRooms() {
   const fetchRooms = async () => {
     try {
       setLoading(true)
-      const res = await api.getAllRooms({ available: true })
+      const res = await api.getAllRooms()
       setRooms(res.data?.rooms || [])
     } catch { setRooms([]) }
     finally { setLoading(false) }
   }
+
+  const getStatus = (room) => room.status || (room.currentOccupancy > 0 ? 'occupied' : 'available')
 
   const filtered = rooms.filter(r => {
     const matchSearch = (r.roomNumber || '').toLowerCase().includes(searchTerm.toLowerCase())
@@ -37,9 +39,9 @@ export default function StudentRooms() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
           { label: 'Total Rooms', value: rooms.length, color: 'primary' },
-          { label: 'Available', value: rooms.filter(r => r.isAvailable).length, color: 'green-600' },
-          { label: 'Single', value: rooms.filter(r => r.roomType === 'single').length, color: 'blue-600' },
-          { label: 'Double', value: rooms.filter(r => r.roomType === 'double').length, color: 'amber-600' },
+          { label: 'Available', value: rooms.filter(r => getStatus(r) === 'available').length, color: 'green-600' },
+          { label: 'Occupied', value: rooms.filter(r => getStatus(r) === 'occupied').length, color: 'blue-600' },
+          { label: 'Maintenance', value: rooms.filter(r => getStatus(r) === 'maintenance').length, color: 'error' },
         ].map(s => (
           <div key={s.label} className="bg-surface-container-lowest p-4 rounded-xl soft-shadow">
             <div className={`text-2xl font-headline font-extrabold text-${s.color}`}>{loading ? '...' : s.value}</div>
@@ -74,14 +76,16 @@ export default function StudentRooms() {
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
           {filtered.map(room => {
-            const isAvailable = room.isAvailable && room.currentOccupancy < room.capacity
+            const status = getStatus(room)
             return (
               <div key={room._id} className={`p-4 rounded-xl card-3d cursor-pointer ${
-                isAvailable ? 'bg-green-50 border border-green-200 hover:ring-2 ring-green-300' : 'bg-primary/5 ghost-border'
+                status === 'available' ? 'bg-green-50 border border-green-200 hover:ring-2 ring-green-300' :
+                status === 'occupied' ? 'bg-primary/5 ghost-border' :
+                'bg-error/5 border border-error/20'
               } transition-all`}>
                 <div className="flex justify-between items-start mb-3">
                   <span className="font-headline font-bold text-lg">{room.roomNumber}</span>
-                  <StatusBadge status={isAvailable ? 'available' : 'occupied'} />
+                  <StatusBadge status={status} />
                 </div>
                 <div className="text-xs text-on-surface-variant space-y-1">
                   <p>Floor {room.floor} • {room.building}</p>

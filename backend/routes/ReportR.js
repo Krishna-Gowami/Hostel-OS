@@ -839,4 +839,79 @@ function convertToCSV(data) {
   return headers + "\n" + rows.join("\n");
 }
 
+// @route   GET /api/reports/financial
+// @desc    Alias for /payments report
+// @access  Admin/Warden
+router.get('/financial', auth, authorize('admin', 'warden'), async (req, res) => {
+  req.url = '/payments'
+  const { startDate, endDate, status } = req.query
+  const filter = {}
+  if (startDate || endDate) { filter.createdAt = {}; if (startDate) filter.createdAt.$gte = new Date(startDate); if (endDate) filter.createdAt.$lte = new Date(endDate) }
+  if (status) filter.status = status
+  try {
+    const payments = await Payment.find(filter).populate('user','name studentId email').populate('room','roomNumber building').sort({ createdAt: -1 })
+    const collected = payments.filter(p => p.status === 'completed').reduce((s, p) => s + (p.finalAmount || p.amount || 0), 0)
+    const pending = payments.filter(p => p.status !== 'completed').reduce((s, p) => s + (p.finalAmount || p.amount || 0), 0)
+    res.json({ success: true, report: { summary: { total: payments.length, collected, pending }, payments }, reportType: 'financial', generatedAt: new Date() })
+  } catch (err) { res.status(500).json({ success: false, message: 'Error generating financial report' }) }
+})
+
+// @route   GET /api/reports/visitors
+// @desc    Visitor log report
+// @access  Admin/Warden
+router.get('/visitors', auth, authorize('admin', 'warden'), async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query
+    const filter = {}
+    if (startDate || endDate) { filter.createdAt = {}; if (startDate) filter.createdAt.$gte = new Date(startDate); if (endDate) filter.createdAt.$lte = new Date(endDate) }
+    const visitors = await Visitor.find(filter).populate('visitingStudent','name studentId email').sort({ createdAt: -1 })
+    res.json({ success: true, report: { total: visitors.length, visitors }, reportType: 'visitors', generatedAt: new Date() })
+  } catch { res.status(500).json({ success: false, message: 'Error generating visitor report' }) }
+})
+
+// @route   GET /api/reports/users
+// @desc    User activity report
+// @access  Admin/Warden
+router.get('/users', auth, authorize('admin', 'warden'), async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query
+    const filter = { role: 'student' }
+    if (startDate || endDate) { filter.createdAt = {}; if (startDate) filter.createdAt.$gte = new Date(startDate); if (endDate) filter.createdAt.$lte = new Date(endDate) }
+    const users = await User.find(filter).select('name studentId email course year phoneNumber isActive createdAt room').populate('room','roomNumber building floor').sort({ createdAt: -1 })
+    res.json({ success: true, report: { total: users.length, users }, reportType: 'users', generatedAt: new Date() })
+  } catch { res.status(500).json({ success: false, message: 'Error generating users report' }) }
+})
+
+// @route   GET /api/reports/monthly-summary
+// @desc    Monthly summary report
+// @access  Admin/Warden
+router.get('/monthly-summary', auth, authorize('admin', 'warden'), async (req, res) => {
+  try {
+    const now = new Date()
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+    const [rooms, payments, complaints, visitors, users] = await Promise.all([
+      Room.countDocuments(),
+      Payment.find({ createdAt: { $gte: startOfMonth } }),
+      Complaint.find({ createdAt: { $gte: startOfMonth } }),
+      Visitor.find({ createdAt: { $gte: startOfMonth } }),
+      User.countDocuments({ role: 'student' }),
+    ])
+    const revenue = payments.filter(p => p.status === 'completed').reduce((s, p) => s + (p.finalAmount || p.amount || 0), 0)
+    const pending = payments.filter(p => p.status !== 'completed').reduce((s, p) => s + (p.finalAmount || p.amount || 0), 0)
+    res.json({
+      success: true,
+      report: {
+        period: `${now.toLocaleString('default', { month: 'long' })} ${now.getFullYear()}`,
+        rooms: { total: rooms },
+        payments: { count: payments.length, revenue, pending },
+        complaints: { total: complaints.length, open: complaints.filter(c => c.status === 'open' || c.status === 'pending').length, resolved: complaints.filter(c => c.status === 'resolved').length },
+        visitors: { total: visitors.length, approved: visitors.filter(v => v.status === 'checked_in' || v.status === 'checked_out').length, rejected: visitors.filter(v => v.status === 'rejected').length },
+        students: { total: users },
+      },
+      reportType: 'monthly-summary',
+      generatedAt: new Date()
+    })
+  } catch (err) { res.status(500).json({ success: false, message: 'Error generating monthly summary' }) }
+})
+
 module.exports = router;

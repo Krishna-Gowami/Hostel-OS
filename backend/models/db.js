@@ -40,6 +40,11 @@ const userSchema = new mongoose.Schema(
       sparse: true,
       unique: true,
     },
+    collegeYear: {
+      type: Number,
+      min: [1, "College year must be at least 1"],
+      max: [6, "College year cannot exceed 6"],
+    },
     specialization: {
       type: String,
       enum: [
@@ -56,6 +61,31 @@ const userSchema = new mongoose.Schema(
     room: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Room",
+    },
+    bloodGroup: {
+      type: String,
+      trim: true,
+    },
+    course: {
+      type: String,
+      trim: true,
+    },
+    fatherName: {
+      type: String,
+      trim: true,
+    },
+    motherName: {
+      type: String,
+      trim: true,
+    },
+    dateOfBirth: Date,
+    governmentId: {
+      type: String,
+      trim: true,
+    },
+    admissionNumber: {
+      type: String,
+      trim: true,
     },
     profilePicture: {
       public_id: String,

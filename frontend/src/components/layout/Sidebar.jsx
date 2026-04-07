@@ -32,6 +32,7 @@ const wardenNav = [
   { label: 'Student Records', icon: Users, path: '/staff/students' },
   { label: 'Leave Requests', icon: ArrowLeftRight, path: '/staff/leave-requests' },
   { label: 'Reports', icon: BarChart3, path: '/staff/reports' },
+  { label: 'Documents', icon: FolderOpen, path: '/staff/documents' },
 ]
 
 // ─── Admin Navigation ───

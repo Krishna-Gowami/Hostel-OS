@@ -921,8 +921,18 @@ router.put("/:id", auth, async (req, res) => {
           message: "Cannot update complaint that is not open",
         });
       }
+
+      // Check for 10-minute edit limit
+      const tenMinutes = 10 * 60 * 1000;
+      if (Date.now() - new Date(complaint.createdAt).getTime() > tenMinutes) {
+        return res.status(400).json({
+          success: false,
+          message: "Complaint cannot be edited after 10 minutes from creation",
+        });
+      }
+
       // Students can only update certain fields
-      const allowedFields = ["title", "description", "category"];
+      const allowedFields = ["title", "description", "category", "priority"];
       req.body = Object.keys(req.body)
         .filter((key) => allowedFields.includes(key))
         .reduce((obj, key) => {
