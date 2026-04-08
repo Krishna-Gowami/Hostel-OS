@@ -45,6 +45,8 @@ const generateStudentId = async () => {
   }
 };
 
+const bcrypt = require("bcryptjs");
+
 // @route   POST /api/auth/register
 // @desc    Register a new user
 // @access  Public
@@ -54,16 +56,15 @@ router.post("/register", validateRegister, async (req, res) => {
       name,
       email,
       password,
+      role = "student",
+      phone,
       phoneNumber,
-      role,
       emergencyContact,
       address,
     } = req.body;
 
-    // Check if user already exists
-    const existingUser = await User.findOne({
-      email,
-    });
+    // 1. Check if user already exists
+    const existingUser = await User.findOne({ email });
 
     if (existingUser) {
       return res.status(400).json({
@@ -72,6 +73,9 @@ router.post("/register", validateRegister, async (req, res) => {
       });
     }
 
+    // Determine final phone number based on frontend payload
+    const finalPhone = phoneNumber || phone || "0000000000";
+
     // Generate student ID automatically for students
     let studentId = null;
     if (role === "student") {
@@ -79,12 +83,13 @@ router.post("/register", validateRegister, async (req, res) => {
       console.log(`📝 Generated student ID: ${studentId}`);
     }
 
-    // Create user
+    // 2. Create user
+    // Note: The password will be hashed automatically by the Mongoose userSchema.pre("save") hook.
     const user = new User({
       name,
       email,
-      password,
-      phoneNumber,
+      password, // Mongoose hashes this for you!
+      phoneNumber: finalPhone,
       role,
       studentId,
       emergencyContact,
@@ -93,39 +98,21 @@ router.post("/register", validateRegister, async (req, res) => {
 
     await user.save();
 
-    // Generate token
+    // 3. Generate token for auth
     const token = generateToken(user._id);
 
-    // Send welcome email asynchronously (don't wait for it to complete)
-    emailService
-      .sendWelcomeEmail({
-        name: user.name,
-        email: user.email,
-        phoneNumber: user.phoneNumber,
-        studentId: user.studentId,
-        role: user.role,
-        emergencyContact: user.emergencyContact,
-      })
-      .then((result) => {
-        if (result.success) {
-          console.log(`📧 Welcome email sent to ${user.email}`);
-        } else {
-          console.error(
-            `❌ Failed to send welcome email to ${user.email}:`,
-            result.error
-          );
-        }
-      })
-      .catch((error) => {
+    // Try to send welcome email
+    emailService.sendWelcomeEmail(user).catch((error) => {
         console.error(`❌ Welcome email error for ${user.email}:`, error);
-      });
+    });
 
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
-      message: "User registered successfully! Welcome email has been sent.",
+      message: "User registered successfully!",
       token,
       user: {
         id: user._id,
+        _id: user._id,
         name: user.name,
         email: user.email,
         role: user.role,
@@ -133,9 +120,10 @@ router.post("/register", validateRegister, async (req, res) => {
         studentId: user.studentId,
       },
     });
+
   } catch (error) {
     console.error("Register error:", error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: "Server error during registration",
       error: process.env.NODE_ENV === "development" ? error.message : undefined,
@@ -150,24 +138,23 @@ router.post("/login", validateLogin, async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Find user by email
-    const user = await User.findOne({ email })
-      .select("+password")
-      .populate("room");
+    // 1. Find user by email
+    const user = await User.findOne({ email }).select("+password").populate("room");
 
     if (!user) {
       return res.status(400).json({
         success: false,
-        message: "Invalid credentials",
+        message: "Invalid credentials (User not found)",
       });
     }
 
-    // Check password - use comparePassword instead of matchPassword
-    const isMatch = await user.comparePassword(password);
+    // 2. Check password directly with bcryptjs
+    const isMatch = await bcrypt.compare(password, user.password);
+    
     if (!isMatch) {
       return res.status(400).json({
         success: false,
-        message: "Invalid credentials",
+        message: "Invalid credentials (Wrong password)",
       });
     }
 
@@ -175,15 +162,16 @@ router.post("/login", validateLogin, async (req, res) => {
     user.lastLogin = new Date();
     await user.save();
 
-    // Generate JWT token
+    // 3. Generate JWT token
     const token = generateToken(user._id);
 
-    res.json({
+    return res.status(200).json({
       success: true,
+      message: "Login successful",
       token,
       user: {
-        id: user._id, // Add id for frontend compatibility
-        _id: user._id, // Keep _id for backend compatibility
+        id: user._id, // frontend compatibility
+        _id: user._id, // backend compatibility
         name: user.name,
         email: user.email,
         role: user.role,
@@ -195,9 +183,10 @@ router.post("/login", validateLogin, async (req, res) => {
         currentStatus: user.currentStatus,
       },
     });
+
   } catch (error) {
     console.error("Login error:", error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: "Server error during login",
       error: process.env.NODE_ENV === "development" ? error.message : undefined,

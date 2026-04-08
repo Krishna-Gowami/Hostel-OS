@@ -29,12 +29,13 @@ const validateRegister = [
     .withMessage("Please provide a valid email"),
   body("password")
     .isLength({ min: 6 })
-    .withMessage("Password must be at least 6 characters")
-    .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
-    .withMessage(
-      "Password must contain at least one uppercase letter, one lowercase letter, and one number"
-    ),
+    .withMessage("Password must be at least 6 characters"),
   body("phoneNumber")
+    .optional()
+    .matches(/^[0-9]{10}$/)
+    .withMessage("Phone number must be 10 digits"),
+  body("phone")
+    .optional()
     .matches(/^[0-9]{10}$/)
     .withMessage("Phone number must be 10 digits"),
   body("role")
