@@ -32,58 +32,16 @@ const settingsRoutes = require("./routes/settingsRoutes");
 const app = express();
 const server = http.createServer(app);
 
-const defaultDevOrigins = [
-  "http://localhost:3000",
-  "http://localhost:3001",
+const allowedOrigins = [
   "http://localhost:5173",
-  "http://127.0.0.1:3000",
-  "http://127.0.0.1:3001",
-  "http://127.0.0.1:5173",
+  "https://hostel-os-nero.vercel.app"
 ];
 
-const envOrigins = (process.env.ALLOWED_ORIGINS || "")
-  .split(",")
-  .map((o) => o.trim())
-  .filter(Boolean);
-
-const allowedOrigins =
-  process.env.NODE_ENV === "production"
-    ? envOrigins.length > 0
-      ? envOrigins
-      : defaultDevOrigins
-    : [...new Set([...defaultDevOrigins, ...envOrigins])];
-
-if (process.env.NODE_ENV === "production" && envOrigins.length === 0) {
-  console.warn(
-    "⚠️ ALLOWED_ORIGINS is empty — using localhost dev defaults. Set ALLOWED_ORIGINS for production."
-  );
-}
-
 // ------------------ 1️⃣ EXPRESS CORS ------------------
-const corsOptions = {
-  origin: function (origin, callback) {
-    // In development, allow all origins (covers network IP access)
-    if (process.env.NODE_ENV !== "production") return callback(null, true);
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error(`Not allowed by CORS: ${origin}`));
-    }
-  },
-  credentials: true,
-  optionsSuccessStatus: 200,
-  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-  allowedHeaders: [
-    "Origin",
-    "X-Requested-With",
-    "Content-Type",
-    "Accept",
-    "Authorization",
-  ],
-};
-app.use(cors(corsOptions));
-app.options("*", cors(corsOptions));
+app.use(cors({
+  origin: allowedOrigins,
+  credentials: true
+}));
 
 // ------------------ 2️⃣ SECURITY ------------------
 app.use(helmet());
