@@ -43,36 +43,41 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/shms').th
       console.log('Mock documents already exist');
   }
 
-  // 2. Add mock revenue data for the teststudent across a few months
-  console.log(`Adding revenue data for student: ${testStudent.email}`);
+  // 2. Add 50 mock payments for realistic charts
+  console.log('Generating 50 mock payments...');
   
   const room = await Room.findOne();
-  
-  const statuses = ['completed', 'completed', 'completed', 'completed', 'pending'];
-  const amounts = [12000, 12000, 12000, 12000, 12000];
   
   const payments = [];
   const now = new Date();
   
-  for (let i = 0; i < 5; i++) {
-     const pDate = new Date(now.getFullYear(), now.getMonth() - i, 15); // middle of month
+  // Generate a spread of payments over the last 12 months
+  for (let i = 0; i < 50; i++) {
+     const monthOffset = Math.floor(Math.random() * 12);
+     const day = Math.floor(Math.random() * 28) + 1;
+     const pDate = new Date(now.getFullYear(), now.getMonth() - monthOffset, day);
+     
+     // Random amount between 10000 and 15000
+     const amount = Math.floor(Math.random() * 5000) + 10000;
+     const paymentType = Math.random() > 0.8 ? 'mess_fee' : 'monthly_rent';
+     
      payments.push({
          user: testStudent._id,
          room: room ? room._id : null,
-         amount: amounts[i],
-         finalAmount: amounts[i],
-         paymentType: 'monthly_rent',
-         status: statuses[i],
-         dueDate: new Date(now.getFullYear(), now.getMonth() - i, 5),      // Dues were 5th of that month
+         amount: amount,
+         finalAmount: amount,
+         paymentType: paymentType,
+         status: 'completed',
+         dueDate: new Date(pDate.getFullYear(), pDate.getMonth(), 5),
          createdAt: pDate,
          updatedAt: pDate,
-         transactionId: statuses[i] === 'completed' ? `TXN-MOCK-${Date.now()}-${i}` : null
+         transactionId: `TXN-MOCK-${Date.now()}-${i}`
      });
   }
   
   await Payment.deleteMany({ transactionId: { $regex: 'TXN-MOCK' } });
   await Payment.insertMany(payments);
-  console.log('Mock payments added successfully');
+  console.log('50 Mock payments added successfully');
   
   process.exit();
 }).catch(e => {

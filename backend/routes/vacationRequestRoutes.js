@@ -242,14 +242,18 @@ router.post(
       await vacationRequest.populate("student", "name email studentId");
       await vacationRequest.populate("room", "roomNumber building floor");
 
-      // Send notification to student
-      const student = await User.findById(vacationRequest.student);
-      if (student) {
-        await emailService.sendVacationRequestApprovalNotification(
-          student,
-          vacationRequest,
-          "approved_admin"
-        );
+      // Send notification to student (best-effort)
+      try {
+        const student = await User.findById(vacationRequest.student._id || vacationRequest.student);
+        if (student && emailService.sendVacationRequestApprovalNotification) {
+          await emailService.sendVacationRequestApprovalNotification(
+            student,
+            vacationRequest,
+            "approved_admin"
+          );
+        }
+      } catch (emailErr) {
+        console.error("❌ Admin approval email failed (non-fatal):", emailErr.message);
       }
 
       // Emit real-time notification
@@ -325,14 +329,18 @@ router.post(
       await vacationRequest.populate("student", "name email studentId");
       await vacationRequest.populate("room", "roomNumber building floor");
 
-      // Send notification to student
-      const student = await User.findById(vacationRequest.student);
-      if (student) {
-        await emailService.sendVacationRequestApprovalNotification(
-          student,
-          vacationRequest,
-          "approved_warden"
-        );
+      // Send notification to student (best-effort)
+      try {
+        const student = await User.findById(vacationRequest.student._id || vacationRequest.student);
+        if (student && emailService.sendVacationRequestApprovalNotification) {
+          await emailService.sendVacationRequestApprovalNotification(
+            student,
+            vacationRequest,
+            "approved_warden"
+          );
+        }
+      } catch (emailErr) {
+        console.error("❌ Warden approval email failed (non-fatal):", emailErr.message);
       }
 
       // Emit real-time notification
