@@ -62,14 +62,12 @@ if (process.env.NODE_ENV === "production" && envOrigins.length === 0) {
 // ------------------ 1️⃣ EXPRESS CORS ------------------
 const corsOptions = {
   origin: function (origin, callback) {
+    // In development, allow all origins (covers network IP access)
+    if (process.env.NODE_ENV !== "production") return callback(null, true);
     if (!origin) return callback(null, true);
-
     if (allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
-      if (process.env.NODE_ENV !== "production") {
-        console.log(`⚠️ CORS Rejected origin: ${origin}`);
-      }
       callback(new Error(`Not allowed by CORS: ${origin}`));
     }
   },
