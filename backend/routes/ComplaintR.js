@@ -69,11 +69,11 @@ router.post("/", auth, validateComplaint, async (req, res) => {
       { path: "room", select: "roomNumber building floor" },
     ]);
 
-    // Send notification to staff
-    await notificationService.sendComplaintNotification(complaint, "new");
+    // Send notification to staff in background
+    notificationService.sendComplaintNotification(complaint, "new").catch(console.error);
 
-    // Send acknowledgment email to complainant
-    await emailService
+    // Send acknowledgment email to complainant in background
+    emailService
       .sendComplaintAcknowledgmentEmail(req.user, complaint)
       .then((result) => {
         if (result.success) {
@@ -96,13 +96,15 @@ router.post("/", auth, validateComplaint, async (req, res) => {
 
     // Emit real-time notification to wardens and admins
     const io = req.app.get("io");
-    io.emit("newComplaint", complaint);
-    notificationService.emitToRole(
-      io,
-      ["admin", "warden"],
-      "newComplaint",
-      complaint
-    );
+    if (io) {
+      io.emit("newComplaint", complaint);
+      notificationService.emitToRole(
+        io,
+        ["admin", "warden"],
+        "newComplaint",
+        complaint
+      );
+    }
 
     res.status(201).json({
       success: true,

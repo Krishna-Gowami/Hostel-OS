@@ -32,14 +32,27 @@ const settingsRoutes = require("./routes/settingsRoutes");
 const app = express();
 const server = http.createServer(app);
 
-const allowedOrigins = [
+const defaultAllowedOrigins = [
   "http://localhost:5173",
   "https://hostel-os-nero.vercel.app"
 ];
 
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(",")
+  : defaultAllowedOrigins;
+
 // ------------------ 1️⃣ EXPRESS CORS ------------------
 app.use(cors({
-  origin: allowedOrigins,
+  origin: function(origin, callback) {
+    // allow requests with no origin (like mobile apps, curl requests)
+    // or if the origin is explicitly allowed, or if it's a localhost origin
+    if (!origin || allowedOrigins.includes(origin) || origin.startsWith("http://localhost") || origin.startsWith("http://127.0.0.1")) {
+      callback(null, true);
+    } else {
+      console.warn(`Blocked by CORS: ${origin}`);
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
   credentials: true
 }));
 
@@ -89,7 +102,13 @@ if (process.env.NODE_ENV !== "production") {
 // ------------------ 6️⃣ SOCKET.IO ------------------
 const io = socketIo(server, {
   cors: {
-    origin: allowedOrigins,
+    origin: function(origin, callback) {
+      if (!origin || allowedOrigins.includes(origin) || origin.startsWith("http://localhost") || origin.startsWith("http://127.0.0.1")) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     methods: ["GET", "POST"],
     credentials: true,
   },

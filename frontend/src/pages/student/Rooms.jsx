@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import api from '../../services/api'
 import StatusBadge from '../../components/ui/StatusBadge'
 import { BedDouble, Search, Wifi, Wind, Bath } from 'lucide-react'
+import { toast } from 'react-toastify'
 
 export default function StudentRooms() {
   const [rooms, setRooms] = useState([])
@@ -27,6 +28,21 @@ export default function StudentRooms() {
     const matchType = filterType === 'all' || r.roomType === filterType
     return matchSearch && matchType
   })
+
+  const handleRequestRoom = async (room) => {
+    if (getStatus(room) !== 'available') return;
+    if (!window.confirm(`Would you like to request allocation for Room ${room.roomNumber}?`)) return;
+
+    try {
+      setLoading(true)
+      const res = await api.post(`/rooms/${room._id}/book`)
+      toast.success(res.data?.message || 'Room requested successfully!')
+      fetchRooms()
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to request room')
+      setLoading(false)
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -78,10 +94,10 @@ export default function StudentRooms() {
           {filtered.map(room => {
             const status = getStatus(room)
             return (
-              <div key={room._id} className={`p-4 rounded-xl card-3d cursor-pointer ${
+              <div key={room._id} onClick={() => handleRequestRoom(room)} className={`p-4 rounded-xl card-3d cursor-pointer ${
                 status === 'available' ? 'bg-green-50 border border-green-200 hover:ring-2 ring-green-300' :
-                status === 'occupied' ? 'bg-primary/5 ghost-border' :
-                'bg-error/5 border border-error/20'
+                status === 'occupied' ? 'bg-primary/5 ghost-border opacity-70' :
+                'bg-error/5 border border-error/20 opacity-70'
               } transition-all`}>
                 <div className="flex justify-between items-start mb-3">
                   <span className="font-headline font-bold text-lg">{room.roomNumber}</span>

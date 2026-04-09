@@ -22,6 +22,7 @@ export default function StudentComplaints() {
   const [statusFilter, setStatusFilter] = useState('all')
   const [categoryFilter, setCategoryFilter] = useState('all')
   const [dateRange, setDateRange] = useState({ start: '', end: '' })
+  const [submitting, setSubmitting] = useState(false)
 
   useEffect(() => { fetchComplaints() }, [])
 
@@ -38,7 +39,9 @@ export default function StudentComplaints() {
     e.preventDefault()
     if (form.title.length < 5) { toast.error('Title must be at least 5 characters'); return }
     if (form.description.length < 10) { toast.error('Description must be at least 10 characters'); return }
-    
+    if (submitting) return;
+
+    setSubmitting(true)
     try {
       if (editingId) {
         await api.updateComplaint(editingId, form)
@@ -57,6 +60,8 @@ export default function StudentComplaints() {
       } else {
         toast.error(err.response?.data?.message || 'Failed to submit')
       }
+    } finally {
+      setSubmitting(false)
     }
   }
 
@@ -240,7 +245,7 @@ export default function StudentComplaints() {
           </div>
           <div className="flex gap-3 pt-2">
             <button type="button" onClick={() => { setShowModal(false); setEditingId(null); setForm(initialForm); }} className="flex-1 py-3 rounded-xl border border-outline-variant/30 text-on-surface-variant font-semibold text-sm hover:bg-surface-container transition-colors">Cancel</button>
-            <button type="submit" className="flex-1 py-3 bg-primary-gradient text-white font-bold text-sm rounded-xl hover:scale-[1.01] active:scale-95 transition-all">{editingId ? 'Save Changes' : 'Submit Complaint'}</button>
+            <button type="submit" disabled={submitting} className={`flex-1 py-3 bg-primary-gradient text-white font-bold text-sm rounded-xl transition-all ${submitting ? 'opacity-50' : 'hover:scale-[1.01] active:scale-95'}`}>{submitting ? 'Submitting...' : editingId ? 'Save Changes' : 'Submit Complaint'}</button>
           </div>
         </form>
       </Modal>

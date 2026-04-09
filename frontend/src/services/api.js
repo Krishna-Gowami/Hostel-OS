@@ -61,6 +61,9 @@ const api = {
   allocateRoom: (id, data) => axiosInstance.post(`/rooms/${id}/allocate`, data),
   deallocateRoom: (id, data) => axiosInstance.post(`/rooms/${id}/deallocate`, data),
   getRoomStats: () => axiosInstance.get('/rooms/stats/occupancy'),
+  getRoomAllocationRequests: () => axiosInstance.get('/rooms/allocation/requests'),
+  approveRoomAllocationRequest: (id) => axiosInstance.post(`/rooms/allocation/requests/${id}/approve`),
+  rejectRoomAllocationRequest: (id) => axiosInstance.post(`/rooms/allocation/requests/${id}/reject`),
 
   // ─── Payments ───
   getAllPayments: (params) => axiosInstance.get('/payments', { params }),

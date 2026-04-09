@@ -77,7 +77,7 @@ export default function StudentDashboard() {
         <div className="bg-surface-container-lowest p-6 rounded-xl card-3d shadow-sm flex items-center justify-between">
           <div>
             <p className="text-on-surface-variant font-medium text-sm">Room No</p>
-            <h2 className="text-3xl font-extrabold font-headline text-primary mt-1">{stats.roomNumber}</h2>
+            <h2 className="text-3xl font-extrabold font-headline text-primary mt-1">{user?.room?.roomNumber || 'Not Assigned'}</h2>
           </div>
           <div className="w-12 h-12 bg-primary-fixed rounded-lg flex items-center justify-center">
             <DoorOpen className="w-6 h-6 text-primary" />
@@ -98,8 +98,8 @@ export default function StudentDashboard() {
 
         <div className="bg-surface-container-lowest p-6 rounded-xl card-3d shadow-sm flex items-center justify-between">
           <div>
-            <p className="text-on-surface-variant font-medium text-sm">New Notices</p>
-            <h2 className="text-3xl font-extrabold font-headline text-primary mt-1">{stats.newNotices}</h2>
+            <p className="text-on-surface-variant font-medium text-sm">Unread Notices</p>
+            <h2 className="text-3xl font-extrabold font-headline text-primary mt-1">{user?.hasUnreadAnnouncements ? 'Yes' : '0'}</h2>
           </div>
           <div className="w-12 h-12 bg-tertiary-fixed rounded-lg flex items-center justify-center">
             <Megaphone className="w-6 h-6 text-tertiary" />

@@ -135,6 +135,10 @@ const userSchema = new mongoose.Schema(
         default: true,
       },
     },
+    hasUnreadAnnouncements: {
+      type: Boolean,
+      default: false,
+    },
     currentStatus: {
       type: String,
       enum: ["in_hostel", "out_of_hostel"],

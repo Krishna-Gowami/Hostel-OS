@@ -228,14 +228,9 @@ router.post(
         comments,
       };
 
-      // Check if both admin and warden have approved
-      if (
-        vacationRequest.adminApproval.approved &&
-        vacationRequest.wardenApproval?.approved
-      ) {
-        vacationRequest.status = "approved";
-        vacationRequest.finalApprovalDate = new Date();
-      }
+      // Admin approval is sufficient to approve the entire request
+      vacationRequest.status = "approved";
+      vacationRequest.finalApprovalDate = new Date();
 
       await vacationRequest.save();
 

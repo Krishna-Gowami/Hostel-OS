@@ -3,7 +3,6 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import { useNavigate } from 'react-router-dom'
 import api from '../../services/api'
-import { mockNotices } from '../../data/mockData'
 
 export default function TopBar({ onMenuClick }) {
   const { user } = useAuth()
@@ -11,18 +10,17 @@ export default function TopBar({ onMenuClick }) {
   const [isNotifOpen, setIsNotifOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [alerts, setAlerts] = useState([])
+  const [notices, setNotices] = useState([])
   const [error, setError] = useState(null)
   const containerRef = useRef(null)
 
-  const hasAnyAlerts = alerts?.length > 0
+  const hasAnyAlerts = alerts?.length > 0 || user?.hasUnreadAnnouncements
   const notifSections = useMemo(() => {
-    // “Admin/Warden messages” in the bell popup currently maps to the existing mock notices.
-    // Actionable alerts come from /api/dashboard/notifications.
     return {
       alerts,
-      notices: mockNotices,
+      notices: notices?.slice(0, 4) || [],
     }
-  }, [alerts])
+  }, [alerts, notices])
 
   useEffect(() => {
     if (!isNotifOpen) return
@@ -46,9 +44,15 @@ export default function TopBar({ onMenuClick }) {
       try {
         setIsLoading(true)
         setError(null)
-        const res = await api.getDashboardNotifications()
+        const [alertsRes, noticesRes] = await Promise.allSettled([
+          api.getDashboardNotifications(),
+          api.getAnnouncements()
+        ])
         if (cancelled) return
-        setAlerts(res.data?.notifications || [])
+        
+        if (alertsRes.status === 'fulfilled') setAlerts(alertsRes.value.data?.notifications || [])
+        if (noticesRes.status === 'fulfilled') setNotices(noticesRes.value.data?.announcements || [])
+        
       } catch (err) {
         if (cancelled) return
         setError(err?.response?.data?.message || err.message || 'Failed to load notifications')
@@ -186,7 +190,10 @@ export default function TopBar({ onMenuClick }) {
                     <div className="text-[11px] font-bold tracking-wide text-on-surface-variant uppercase mb-2">
                       Messages
                     </div>
-                    {mockNotices?.slice(0, 4).map((notice) => (
+                    {notifSections.notices.length === 0 && !isLoading && (
+                      <div className="text-xs text-on-surface-variant px-2 py-1">No recent messages</div>
+                    )}
+                    {notifSections.notices.map((notice) => (
                       <button
                         key={notice._id}
                         type="button"
@@ -198,12 +205,10 @@ export default function TopBar({ onMenuClick }) {
                       >
                         <div
                           className={`w-9 h-9 rounded-lg border flex items-center justify-center shrink-0 ${
-                            notice.color === 'error'
+                            notice.priority === 'urgent'
                               ? 'bg-error-container/30 text-error border-error/25'
-                              : notice.color === 'secondary'
+                              : notice.priority === 'info'
                               ? 'bg-secondary-fixed/20 text-secondary border-secondary-fixed/25'
-                              : notice.color === 'tertiary'
-                              ? 'bg-tertiary-fixed/20 text-tertiary border-tertiary-fixed/25'
                               : 'bg-primary-fixed/15 text-primary border-primary/25'
                           }`}
                         >
@@ -213,7 +218,7 @@ export default function TopBar({ onMenuClick }) {
                           <div className="font-bold text-sm text-on-surface truncate">{notice.title}</div>
                           <div className="text-xs text-on-surface-variant mt-0.5 leading-snug line-clamp-2">{notice.message}</div>
                           <div className="text-[10px] font-bold text-primary mt-1 flex items-center gap-1">
-                            <span className="opacity-80">{notice.time}</span>
+                            <span className="opacity-80">{new Date(notice.createdAt).toLocaleString()}</span>
                           </div>
                         </div>
                       </button>

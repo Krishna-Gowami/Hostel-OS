@@ -23,6 +23,7 @@ export default function AdminRooms() {
   const [form, setForm] = useState(defaultForm)
   const [editForm, setEditForm] = useState({})
   const [loadingRoom, setLoadingRoom] = useState(false)
+  const [requests, setRequests] = useState([])
 
   const fetchRooms = useCallback(async () => {
     try {
@@ -33,7 +34,14 @@ export default function AdminRooms() {
     finally { setLoading(false) }
   }, [])
 
-  useEffect(() => { fetchRooms() }, [fetchRooms])
+  const fetchRequests = useCallback(async () => {
+    try {
+      const res = await api.getRoomAllocationRequests()
+      setRequests(res.data?.requests || [])
+    } catch { setRequests([]) }
+  }, [])
+
+  useEffect(() => { fetchRooms(); fetchRequests() }, [fetchRooms, fetchRequests])
 
   const handleCreate = async (e) => {
     e.preventDefault()
@@ -82,6 +90,24 @@ export default function AdminRooms() {
     } catch (err) { toast.error(err.response?.data?.message || 'Delete failed') }
   }
 
+  const handleApproveRequest = async (id) => {
+    try {
+      await api.approveRoomAllocationRequest(id)
+      toast.success('Request approved and room assigned')
+      fetchRequests()
+      fetchRooms()
+    } catch (err) { toast.error(err.response?.data?.message || 'Approval failed') }
+  }
+
+  const handleRejectRequest = async (id) => {
+    if (!window.confirm('Reject this request?')) return
+    try {
+      await api.rejectRoomAllocationRequest(id)
+      toast.success('Request rejected')
+      fetchRequests()
+    } catch (err) { toast.error(err.response?.data?.message || 'Rejection failed') }
+  }
+
   const getStatus = (room) => room.status || (room.currentOccupancy > 0 ? 'occupied' : 'available')
 
   const filtered = rooms.filter(r => filterStatus === 'all' || getStatus(r) === filterStatus)
@@ -108,6 +134,10 @@ export default function AdminRooms() {
           )}
           <button onClick={() => setView('grid')} className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${view === 'grid' ? 'bg-primary text-white' : 'bg-surface-container text-on-surface-variant'}`}>Grid</button>
           <button onClick={() => setView('list')} className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${view === 'list' ? 'bg-primary text-white' : 'bg-surface-container text-on-surface-variant'}`}>List</button>
+          <button onClick={() => setView('requests')} className={`px-4 py-2 rounded-lg text-sm font-medium transition-all relative ${view === 'requests' ? 'bg-primary text-white' : 'bg-surface-container text-on-surface-variant'}`}>
+            Requests
+            {requests.length > 0 && <span className="absolute -top-1 -right-1 w-3 h-3 bg-error rounded-full pointer-events-none" />}
+          </button>
         </div>
       </div>
 
@@ -135,8 +165,31 @@ export default function AdminRooms() {
         ))}
       </div>
 
-      {/* Grid / List */}
-      {loading ? <div className="p-8 text-center text-on-surface-variant">Loading rooms...</div> : view === 'grid' ? (
+      {/* Grid / List / Requests */}
+      {loading ? <div className="p-8 text-center text-on-surface-variant">Loading rooms...</div> : view === 'requests' ? (
+        <div className="bg-surface-container-lowest rounded-2xl soft-shadow overflow-hidden p-4">
+          <h3 className="font-headline font-bold text-lg mb-4">Pending Room Requests</h3>
+          {requests.length === 0 ? (
+            <div className="text-center py-8 text-on-surface-variant">No pending requests.</div>
+          ) : (
+            <div className="space-y-4">
+              {requests.map(req => (
+                <div key={req._id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-surface-container rounded-xl border border-outline-variant/10">
+                  <div className="flex-1">
+                    <p className="font-bold text-sm text-on-surface">{req.student?.name} <span className="text-xs text-on-surface-variant font-normal">({req.student?.studentId})</span></p>
+                    <p className="text-xs text-primary mt-1 font-medium">Requested Room {req.room?.roomNumber} (Block {req.room?.building}, Floor {req.room?.floor})</p>
+                    <p className="text-[10px] text-on-surface-variant mt-1">Requested on {new Date(req.createdAt).toLocaleDateString()}</p>
+                  </div>
+                  <div className="flex gap-2 mt-3 sm:mt-0">
+                    <button onClick={() => handleApproveRequest(req._id)} className="px-4 py-2 text-xs font-bold text-white bg-green-600 hover:bg-green-700 rounded-lg transition-colors">Approve</button>
+                    <button onClick={() => handleRejectRequest(req._id)} className="px-4 py-2 text-xs font-bold text-error bg-error/10 hover:bg-error/20 rounded-lg transition-colors">Reject</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      ) : view === 'grid' ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
           {filtered.map(room => {
             const status = getStatus(room)

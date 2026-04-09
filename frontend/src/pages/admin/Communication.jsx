@@ -3,7 +3,7 @@ import api from '../../services/api'
 import { toast } from 'react-toastify'
 import { MessageSquare, Send, Bell, Clock, Trash2 } from 'lucide-react'
 
-const AUDIENCES = ['All Residents', 'Wing A', 'Wing B', 'Floor 1', 'Floor 2', 'Floor 3', 'Floor 4']
+const AUDIENCES = [{label: 'All Residents', value: 'all'}, {label: 'Staff Only', value: 'staff'}, {label: 'Students Only', value: 'student'}]
 const PRIORITIES = ['normal', 'info', 'urgent']
 
 const colorMap = { urgent: 'bg-error-container/30 text-error', info: 'bg-secondary-fixed text-secondary', normal: 'bg-primary-fixed text-primary' }
@@ -19,7 +19,8 @@ function timeAgo(date) {
 export default function Communication() {
   const [title, setTitle] = useState('')
   const [message, setMessage] = useState('')
-  const [audience, setAudience] = useState('All Residents')
+  const [audience, setAudience] = useState('all')
+  const [targetBuilding, setTargetBuilding] = useState('')
   const [priority, setPriority] = useState('normal')
   const [sending, setSending] = useState(false)
   const [announcements, setAnnouncements] = useState([])
@@ -39,9 +40,9 @@ export default function Communication() {
     if (!title.trim() || !message.trim()) return toast.error('Title and message are required')
     setSending(true)
     try {
-      await api.post('/announcements', { title, message, audience, priority })
+      await api.post('/announcements', { title, message, audience, priority, targetBuilding: targetBuilding || undefined })
       toast.success('Announcement sent successfully!')
-      setTitle(''); setMessage(''); setAudience('All Residents'); setPriority('normal')
+      setTitle(''); setMessage(''); setAudience('all'); setTargetBuilding(''); setPriority('normal')
       fetchAnnouncements()
     } catch (err) { toast.error(err.response?.data?.message || 'Failed to send') }
     finally { setSending(false) }
@@ -71,9 +72,15 @@ export default function Communication() {
             <div className="space-y-2">
               <label className="text-sm font-semibold text-on-surface">Target Audience</label>
               <select value={audience} onChange={e => setAudience(e.target.value)} className="w-full py-3 px-4 bg-surface-container border-none rounded-xl text-sm focus:ring-2 focus:ring-primary">
-                {AUDIENCES.map(a => <option key={a}>{a}</option>)}
+                {AUDIENCES.map(a => <option key={a.value} value={a.value}>{a.label}</option>)}
               </select>
             </div>
+            {audience === 'student' && (
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-on-surface">Target Building (Optional)</label>
+                <input type="text" value={targetBuilding} onChange={e => setTargetBuilding(e.target.value)} placeholder="e.g. Block A" className="w-full py-3 px-4 bg-surface-container border-none rounded-xl text-sm focus:ring-2 focus:ring-primary" />
+              </div>
+            )}
             <div className="space-y-2">
               <label className="text-sm font-semibold text-on-surface">Priority</label>
               <select value={priority} onChange={e => setPriority(e.target.value)} className="w-full py-3 px-4 bg-surface-container border-none rounded-xl text-sm focus:ring-2 focus:ring-primary">
@@ -116,7 +123,7 @@ export default function Communication() {
                   <p className="text-xs text-on-surface-variant mt-1">{notice.message}</p>
                   <div className="flex items-center gap-3 mt-2">
                     <p className="text-[10px] font-bold text-primary flex items-center gap-1"><Clock className="w-3 h-3" />{timeAgo(notice.createdAt)}</p>
-                    <span className="text-[10px] text-on-surface-variant">→ {notice.audience}</span>
+                    <span className="text-[10px] text-on-surface-variant line-clamp-1">→ {notice.audience === 'all' ? 'All Residents' : notice.audience === 'student' ? (notice.targetBuilding ? `Students in ${notice.targetBuilding}` : 'All Students') : 'Staff Members'}</span>
                     {notice.createdBy && <span className="text-[10px] text-on-surface-variant">by {notice.createdBy.name}</span>}
                   </div>
                 </div>

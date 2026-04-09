@@ -6,6 +6,9 @@ import {
   CalendarCheck, FolderOpen, ArrowLeftRight, Building2, CreditCard,
   UserPlus, Bell, BarChart3, Eye, PieChart
 } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { useLocation } from 'react-router-dom'
+import api from '../../services/api'
 
 // ─── Student Navigation ───
 // Per RBAC: Dashboard, Room Booking, Payments, Complaints (own), Visitors (register + own), Documents, Leave, Room Allotment, Notifications
@@ -56,6 +59,28 @@ const adminNav = [
 export default function Sidebar({ isOpen, onClose }) {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
+  const [pendingAllocationsCount, setPendingAllocationsCount] = useState(0)
+  const [pendingApplicationsCount, setPendingApplicationsCount] = useState(0)
+
+  useEffect(() => {
+    if (!user || user.role === 'student') return;
+    const fetchCounts = async () => {
+      try {
+        const [allocRes, appRes] = await Promise.all([
+          api.getRoomAllocationRequests(),
+          api.getVacationRequests({ status: 'pending' })
+        ])
+        setPendingAllocationsCount(allocRes.data?.requests?.length || 0)
+        setPendingApplicationsCount(appRes.data?.requests?.length || appRes.data?.vacationRequests?.length || appRes.data?.count || 0)
+      } catch (err) {
+        console.error('Failed to fetch pending counts for sidebar', err)
+      }
+    }
+    fetchCounts()
+    const interval = setInterval(fetchCounts, 60000)
+    return () => clearInterval(interval)
+  }, [user])
 
   const getNavItems = () => {
     if (!user) return studentNav
@@ -110,7 +135,7 @@ export default function Sidebar({ isOpen, onClose }) {
           {navItems.map(item => (
             <NavLink key={item.path} to={item.path} onClick={onClose}
               className={({ isActive }) => `
-                flex items-center gap-3 py-2.5 px-4 mb-0.5 transition-all duration-200 rounded-lg text-sm
+                relative flex items-center gap-3 py-2.5 px-4 mb-0.5 transition-all duration-200 rounded-lg text-sm
                 ${isActive
                   ? 'bg-indigo-600/20 text-indigo-100 border-l-4 border-indigo-500 translate-x-1'
                   : 'text-slate-400 hover:text-white hover:bg-white/5 border-l-4 border-transparent hover:translate-x-1'
@@ -119,6 +144,12 @@ export default function Sidebar({ isOpen, onClose }) {
             >
               <item.icon className="w-[18px] h-[18px] shrink-0" />
               <span className="font-medium">{item.label}</span>
+              {((item.path === '/admin/applications' || item.path === '/staff/leave-requests') && pendingApplicationsCount > 0 && location.pathname !== item.path) && (
+                <span className="absolute right-4 w-2 h-2 bg-blue-500 rounded-full shadow-[0_0_8px_rgba(59,130,246,0.8)]" />
+              )}
+              {((item.path === '/admin/rooms' || item.path === '/staff/rooms') && pendingAllocationsCount > 0 && location.pathname !== item.path) && (
+                <span className="absolute right-4 w-2 h-2 bg-blue-500 rounded-full shadow-[0_0_8px_rgba(59,130,246,0.8)]" />
+              )}
             </NavLink>
           ))}
         </nav>

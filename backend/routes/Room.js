@@ -294,150 +294,166 @@ router.delete("/:id", auth, authorize("admin"), async (req, res) => {
 });
 
 // @route   POST /api/rooms/:id/book
-// @desc    Book a room (automatic bed allocation)
+// @desc    Request to book a room (requires admin approval)
 // @access  Student
 router.post("/:id/book", auth, authorize("student"), async (req, res) => {
   try {
+    const RoomAllocationRequest = require("../models/roomAllocationRequest");
     console.log(
-      `📚 Student ${req.user._id} attempting to book room ${req.params.id}`
+      `📚 Student ${req.user._id} attempting to request room ${req.params.id}`
     );
 
     const room = await Room.findById(req.params.id);
     if (!room) {
-      return res.status(404).json({
-        success: false,
-        message: "Room not found",
-      });
+      return res.status(404).json({ success: false, message: "Room not found" });
     }
 
-    // Check if room is available
     if (room.status === "maintenance") {
-      return res.status(400).json({
-        success: false,
-        message: "Room is under maintenance",
-      });
+      return res.status(400).json({ success: false, message: "Room is under maintenance" });
     }
 
-    // Check if room has available beds
     const availableBeds = room.beds.filter((bed) => !bed.isOccupied);
     if (availableBeds.length === 0) {
-      return res.status(400).json({
-        success: false,
-        message: "Room is full",
-      });
+      return res.status(400).json({ success: false, message: "Room is full" });
     }
 
-    // Get the user to check if they already have a room
     const user = await User.findById(req.user._id);
-    console.log(`👤 User room status:`, user.room);
 
-    // Check if user already has a room
     if (user && user.room && user.room !== null) {
-      console.log(`⚠️  User already has room: ${user.room}`);
       return res.status(400).json({
         success: false,
-        message:
-          "You already have a room assigned. Please vacate current room first.",
+        message: "You already have a room assigned. Please vacate current room first.",
       });
     }
 
-    // Check if user is already in this room
-    const userBed = room.beds.find(
-      (bed) =>
-        bed.isOccupied &&
-        bed.occupant &&
-        bed.occupant.toString() === req.user._id.toString()
-    );
-    if (userBed) {
-      return res.status(400).json({
-        success: false,
-        message: "You are already in this room",
-      });
+    // Check if user already has a pending request
+    const existingRequest = await RoomAllocationRequest.findOne({
+      student: req.user._id,
+      status: 'pending'
+    });
+    
+    if (existingRequest) {
+        return res.status(400).json({
+            success: false,
+            message: "You already have a pending room allocation request.",
+        });
     }
 
-    // Allocate the first available bed
-    const bedToAllocate = availableBeds[0];
-    const bedIndex = room.beds.findIndex(
-      (bed) => bed.bedNumber === bedToAllocate.bedNumber
-    );
-
-    console.log(
-      `🛏️ Allocating bed ${bedToAllocate.bedNumber} to student ${req.user._id}`
-    );
-
-    room.beds[bedIndex].isOccupied = true;
-    room.beds[bedIndex].occupant = req.user._id;
-    room.beds[bedIndex].allocationDate = new Date();
-
-    await room.save();
-
-    // Update user's room
-    await User.findByIdAndUpdate(req.user._id, { room: room._id });
-
-    // Populate the updated room
-    await room.populate({
-      path: "beds.occupant",
-      select: "name email phoneNumber studentId",
+    const allocationRequest = new RoomAllocationRequest({
+        student: req.user._id,
+        room: room._id,
+        status: 'pending'
     });
+    await allocationRequest.save();
 
-    console.log(
-      `✅ Room ${room._id} booked successfully for student ${req.user._id}`
+    console.log(`✅ Room ${room._id} allocation requested successfully for student ${req.user._id}`);
+
+    // Update unread flag for admins/wardens
+    await User.updateMany(
+        { role: { $in: ['admin', 'warden'] } },
+        { hasUnreadAnnouncements: true }
     );
-
-    // Send room booking confirmation email
-    const emailService = require("../services/emailService");
-    await emailService
-      .sendRoomBookingAcknowledgmentEmail(req.user, room)
-      .then((result) => {
-        if (result.success) {
-          console.log(
-            `📧 Room booking confirmation email sent to ${req.user.email}`
-          );
-        } else {
-          console.error(`❌ Failed to send room booking email:`, result.error);
-        }
-      })
-      .catch((error) => {
-        console.error(`❌ Error sending room booking email:`, error);
-      });
-
-    // Emit real-time update
-    const io = req.app.get("io");
-    io.emit("roomBooked", {
-      room,
-      user: {
-        id: req.user._id,
-        name: req.user.name,
-        email: req.user.email,
-      },
-      bedNumber: bedToAllocate.bedNumber,
-    });
 
     res.json({
       success: true,
-      message: `Room booked successfully. Bed ${bedToAllocate.bedNumber} allocated.`,
-      room,
-      allocatedBed: bedToAllocate.bedNumber,
+      message: `Room request submitted successfully. Awaiting admin approval.`,
     });
   } catch (error) {
-    console.error("❌ Book room error:", error.message);
-    console.error("📋 Error stack:", error.stack);
-
-    // Send detailed error response in development
-    if (process.env.NODE_ENV === "development") {
-      res.status(500).json({
-        success: false,
-        message: "Server error",
-        error: error.message,
-        stack: error.stack,
-      });
-    } else {
-      res.status(500).json({
-        success: false,
-        message: "Server error",
-      });
-    }
+    console.error("❌ Request room error:", error.message);
+    res.status(500).json({ success: false, message: "Server error" });
   }
+});
+
+// @route   GET /api/rooms/allocation-requests
+// @desc    Get all pending room allocation requests
+// @access  Admin/Warden
+router.get("/allocation/requests", auth, authorize("admin", "warden"), async (req, res) => {
+    try {
+        const RoomAllocationRequest = require("../models/roomAllocationRequest");
+        const requests = await RoomAllocationRequest.find({ status: 'pending' })
+            .populate('student', 'name email studentId')
+            .populate('room', 'roomNumber building floor')
+            .sort({ createdAt: -1 });
+            
+        res.json({ success: true, requests });
+    } catch (err) {
+        res.status(500).json({ success: false, message: "Server error" });
+    }
+});
+
+// @route   POST /api/rooms/allocation-requests/:requestId/approve
+// @desc    Approve a room allocation request
+// @access  Admin/Warden
+router.post("/allocation/requests/:requestId/approve", auth, authorize("admin", "warden"), async (req, res) => {
+    try {
+        const RoomAllocationRequest = require("../models/roomAllocationRequest");
+        const request = await RoomAllocationRequest.findById(req.params.requestId).populate('student room');
+        
+        if (!request || request.status !== 'pending') {
+            return res.status(404).json({ success: false, message: "Pending request not found" });
+        }
+        
+        const room = await Room.findById(request.room._id);
+        const availableBeds = room.beds.filter((bed) => !bed.isOccupied);
+        if (availableBeds.length === 0) {
+            return res.status(400).json({ success: false, message: "Room is now full, cannot approve." });
+        }
+        
+        const user = await User.findById(request.student._id);
+        if (user.room) {
+            return res.status(400).json({ success: false, message: "Student already assigned a room." });
+        }
+        
+        // Allocate first available bed
+        const bedToAllocate = availableBeds[0];
+        const bedIndex = room.beds.findIndex(b => b.bedNumber === bedToAllocate.bedNumber);
+        room.beds[bedIndex].isOccupied = true;
+        room.beds[bedIndex].occupant = user._id;
+        room.beds[bedIndex].allocationDate = new Date();
+        await room.save();
+        
+        // Update User
+        user.room = room._id;
+        user.hasUnreadAnnouncements = true; // Set unread dot for student
+        await user.save();
+        
+        // Update Request
+        request.status = 'approved';
+        await request.save();
+        
+        // Optional tracking / Send announcement directed to the student
+        const Announcement = require('../models/announcement');
+        await Announcement.create({
+            title: 'Room Allocation Approved',
+            message: `Your request for Room ${room.roomNumber} has been approved. You have been assigned Bed ${bedToAllocate.bedNumber}.`,
+            targetBuilding: room.building,
+            audience: 'student', // Doesn't exactly target one student, but we can set hasUnreadAnnouncements.
+            priority: 'info',
+            createdBy: req.user._id
+        });
+        
+        res.json({ success: true, message: "Request approved and bed allocated" });
+    } catch (err) {
+        res.status(500).json({ success: false, message: "Server error" });
+    }
+});
+
+// @route   POST /api/rooms/allocation-requests/:requestId/reject
+// @desc    Reject a room allocation request
+// @access  Admin/Warden
+router.post("/allocation/requests/:requestId/reject", auth, authorize("admin", "warden"), async (req, res) => {
+    try {
+        const RoomAllocationRequest = require("../models/roomAllocationRequest");
+        const request = await RoomAllocationRequest.findByIdAndUpdate(req.params.requestId, { status: 'rejected' });
+        
+        if (!request) return res.status(404).json({ success: false, message: "Request not found" });
+        
+        await User.findByIdAndUpdate(request.student, { hasUnreadAnnouncements: true });
+        
+        res.json({ success: true, message: "Request rejected" });
+    } catch (err) {
+        res.status(500).json({ success: false, message: "Server error" });
+    }
 });
 
 // @route   POST /api/rooms/:id/vacate
