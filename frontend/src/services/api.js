@@ -132,7 +132,16 @@ const api = {
   // ─── Visitors (extra) ───
   cancelExpiredVisitors: () => axiosInstance.put('/visitors/cancel-expired'),
 
-
+  // ─── Hostel Applications ───
+  submitHostelApplication: (data) => axiosInstance.post('/hostel-applications/submit', data),
+  getHostelApplications: (params) => axiosInstance.get('/hostel-applications', { params }),
+  getHostelApplicationById: (id) => axiosInstance.get(`/hostel-applications/${id}`),
+  getHostelConfig: () => axiosInstance.get('/hostel-applications/config'),
+  updateHostelConfig: (data) => axiosInstance.put('/hostel-applications/config', data),
+  allocateHostelApplication: (id) => axiosInstance.post(`/hostel-applications/${id}/allocate`),
+  unallocateHostelApplication: (id) => axiosInstance.post(`/hostel-applications/${id}/unallocate`),
+  finalizeHostelApplications: () => axiosInstance.post('/hostel-applications/finalize'),
+  sendHostelNotifications: () => axiosInstance.post('/hostel-applications/send-notifications'),
   // ─── Generic ───
   get: (url, config) => axiosInstance.get(url, config),
   post: (url, data, config) => axiosInstance.post(url, data, config),

@@ -2,7 +2,7 @@ import { NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import {
   LayoutDashboard, BedDouble, AlertTriangle, FileText, Users, Wrench,
-  ClipboardCheck, MessageSquare, Settings, LogOut, Shield, UserCog,
+  ClipboardCheck, ClipboardList, MessageSquare, Settings, LogOut, Shield, UserCog,
   CalendarCheck, FolderOpen, ArrowLeftRight, Building2, CreditCard,
   UserPlus, Bell, BarChart3, Eye, PieChart
 } from 'lucide-react'
@@ -48,6 +48,7 @@ const adminNav = [
   { label: 'Visitors', icon: Eye, path: '/admin/visitors' },
   { label: 'Payments', icon: CreditCard, path: '/admin/payments' },
   { label: 'Applications', icon: ClipboardCheck, path: '/admin/applications' },
+  { label: 'Hostel Applications', icon: ClipboardList, path: '/admin/hostel-applications' },
   { label: 'Maintenance', icon: Wrench, path: '/admin/maintenance' },
   { label: 'Communication', icon: MessageSquare, path: '/admin/communication' },
   { label: 'Analytics', icon: PieChart, path: '/admin/analytics' },

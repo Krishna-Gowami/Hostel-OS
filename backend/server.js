@@ -28,6 +28,7 @@ const feeConfigRoutes = require("./routes/feeConfigR");
 const announcementRoutes = require("./routes/announcementR");
 const documentRoutes = require("./routes/documentRoutes");
 const settingsRoutes = require("./routes/settingsRoutes");
+const hostelApplicationRoutes = require("./routes/hostelApplicationR");
 
 const app = express();
 const server = http.createServer(app);
@@ -166,6 +167,7 @@ app.use("/api/fee-config", feeConfigRoutes);
 app.use("/api/announcements", announcementRoutes);
 app.use("/api/documents", documentRoutes);
 app.use("/api/settings", settingsRoutes);
+app.use("/api/hostel-applications", hostelApplicationRoutes);
 app.use("/uploads", express.static(require("path").join(__dirname, "uploads")));
 
 // Health check

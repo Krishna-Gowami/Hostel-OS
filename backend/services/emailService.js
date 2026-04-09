@@ -2270,6 +2270,116 @@ class EmailService {
     </html>
     `;
   }
+
+  // ─── Hostel Application Rejection Email ──────────────────────────────
+  async sendHostelRejectionEmail(email, name, customMessage) {
+    try {
+      const mailOptions = {
+        from: `"HostelOS Admissions" <${process.env.EMAIL_FROM}>`,
+        to: email,
+        subject: '❌ HostelOS Application – Status Update',
+        html: `
+        <!DOCTYPE html>
+        <html lang="en">
+        <head><meta charset="UTF-8"><style>
+          body { font-family: 'Segoe UI', sans-serif; background: #f4f4f4; margin: 0; padding: 20px; }
+          .container { background: white; max-width: 600px; margin: 0 auto; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+          .header { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; padding: 32px; text-align: center; }
+          .header h1 { margin: 0; font-size: 24px; }
+          .body { padding: 32px; }
+          .message-box { background: #fef2f2; border-left: 4px solid #ef4444; padding: 16px; border-radius: 8px; margin: 20px 0; color: #7f1d1d; }
+          .footer { text-align: center; padding: 20px; color: #9ca3af; font-size: 13px; border-top: 1px solid #f3f4f6; }
+        </style></head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>❌ Application Status Update</h1>
+              <p style="margin:8px 0 0; opacity:0.9;">HostelOS Admissions 2025</p>
+            </div>
+            <div class="body">
+              <p>Dear <strong>${name}</strong>,</p>
+              <div class="message-box">
+                ${customMessage || 'Thank you for applying for hostel accommodation. Unfortunately, your application has not been selected at this time.'}
+              </div>
+              <p>If you believe there is an error, please contact the hostel administration directly.</p>
+            </div>
+            <div class="footer">
+              <p>HostelOS • Smart Hostel Management System</p>
+              <p>This is an automated notification. Do not reply to this email.</p>
+            </div>
+          </div>
+        </body>
+        </html>
+        `
+      };
+      const info = await this.transporter.sendMail(mailOptions);
+      console.log('✅ Hostel rejection email sent to:', email, info.messageId);
+      return { success: true };
+    } catch (err) {
+      console.error('❌ Hostel rejection email failed:', err.message);
+      return { success: false, error: err.message };
+    }
+  }
+
+  // ─── Hostel Application Allocation Email ─────────────────────────────
+  async sendHostelAllocationEmail(email, name, category, customMessage) {
+    try {
+      const mailOptions = {
+        from: `"HostelOS Admissions" <${process.env.EMAIL_FROM}>`,
+        to: email,
+        subject: '🎉 HostelOS – Congratulations! You have been allocated a hostel room',
+        html: `
+        <!DOCTYPE html>
+        <html lang="en">
+        <head><meta charset="UTF-8"><style>
+          body { font-family: 'Segoe UI', sans-serif; background: #f4f4f4; margin: 0; padding: 20px; }
+          .container { background: white; max-width: 600px; margin: 0 auto; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+          .header { background: linear-gradient(135deg, #4f46e5, #6366f1); color: white; padding: 32px; text-align: center; }
+          .header h1 { margin: 0; font-size: 24px; }
+          .body { padding: 32px; }
+          .success-box { background: #f0fdf4; border-left: 4px solid #22c55e; padding: 16px; border-radius: 8px; margin: 20px 0; color: #14532d; }
+          .credentials { background: #fafafa; border: 1px dashed #ccc; padding: 16px; border-radius: 8px; margin: 20px 0; font-family: monospace; }
+          .cta { display: block; background: linear-gradient(135deg, #4f46e5, #6366f1); color: white; text-decoration: none; padding: 14px 32px; border-radius: 8px; text-align: center; font-weight: bold; margin: 24px 0; }
+          .footer { text-align: center; padding: 20px; color: #9ca3af; font-size: 13px; border-top: 1px solid #f3f4f6; }
+        </style></head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>🎉 You Have Been Selected!</h1>
+              <p style="margin:8px 0 0; opacity:0.9;">HostelOS Admissions 2025</p>
+            </div>
+            <div class="body">
+              <p>Dear <strong>${name}</strong>,</p>
+              <div class="success-box">
+                ${customMessage || 'Congratulations! You have been allocated a hostel room for the academic year.'}
+              </div>
+              <div class="credentials">
+                <strong>Portal Login Credentials:</strong><br><br>
+                Email: ${email}<br>
+                Password: ${email}
+              </div>
+              <p>Please log in immediately and change your password.</p>
+              <a href="${process.env.CLIENT_URL}/login" class="cta">Access HostelOS Portal →</a>
+              <p style="color:#6b7280; font-size:14px;">If you have any queries, please contact the hostel administration office.</p>
+            </div>
+            <div class="footer">
+              <p>HostelOS • Smart Hostel Management System</p>
+              <p>This is an automated notification. Do not reply to this email.</p>
+            </div>
+          </div>
+        </body>
+        </html>
+        `
+      };
+      const info = await this.transporter.sendMail(mailOptions);
+      console.log('✅ Hostel allocation email sent to:', email, info.messageId);
+      return { success: true };
+    } catch (err) {
+      console.error('❌ Hostel allocation email failed:', err.message);
+      return { success: false, error: err.message };
+    }
+  }
 }
 
 module.exports = new EmailService();
+

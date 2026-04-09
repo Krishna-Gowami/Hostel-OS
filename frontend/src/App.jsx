@@ -9,6 +9,10 @@ import Layout from './components/layout/AppLayout'
 import Login from './pages/auth/Login'
 import Register from './pages/auth/Register'
 
+// Public Pages
+import Landing from './pages/Landing'
+import Apply from './pages/apply/Apply'
+
 // Student Pages
 import StudentDashboard from './pages/student/Dashboard'
 import StudentProfile from './pages/student/Profile'
@@ -46,6 +50,7 @@ import AdminAnalytics from './pages/admin/Analytics'
 import AdminReports from './pages/admin/Reports'
 import AdminDocuments from './pages/admin/Documents'
 import AdminSettings from './pages/admin/Settings'
+import AdminHostelApplications from './pages/admin/HostelApplications'
 
 // Role-based home redirect
 function HomeRedirect() {
@@ -68,9 +73,10 @@ export default function App() {
           {/* Public */}
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/apply" element={<Apply />} />
 
           {/* Home redirect */}
-          <Route path="/" element={<HomeRedirect />} />
+          <Route path="/" element={<Landing />} />
 
           {/* ─── Student Routes ─── */}
           <Route element={<ProtectedRoute roles={['student']} />}>
@@ -118,6 +124,7 @@ export default function App() {
               <Route path="/admin/reports" element={<AdminReports />} />
               <Route path="/admin/documents" element={<AdminDocuments />} />
               <Route path="/admin/settings" element={<AdminSettings />} />
+              <Route path="/admin/hostel-applications" element={<AdminHostelApplications />} />
             </Route>
           </Route>
 
